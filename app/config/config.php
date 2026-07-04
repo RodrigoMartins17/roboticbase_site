@@ -37,6 +37,7 @@ if (!defined('BASE_URL')) {
 // No XAMPP local é "root" sem password. Quando alojo o site online, o host dá-me
 // outros dados — basta mudá-los AQUI (ou pôr variáveis de ambiente no servidor).
 if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_PORT')) define('DB_PORT', (int)(getenv('DB_PORT') ?: 3306));
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'clube_robotica');
 if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: '');
