@@ -139,7 +139,10 @@ $renderTableRows = function ($items) {
 // (o formulário em si está em app/views/administracao/_filtros.php).
 $filtrosAccao = 'admin/requisicoesMateriais';
 $filtrosPlaceholder = 'Pesquisar por utilizador, material ou referência…';
-$filtrosSelects = ['estado' => ['label' => 'Estado', 'opcoes' => $estadosReq ?? []]];
+$filtrosSelects = [
+    'utilizador' => ['label' => 'Utilizador', 'opcoes' => $utilizadoresReq ?? []],
+    'estado'     => ['label' => 'Estado',     'opcoes' => $estadosReq ?? []],
+];
 include __DIR__ . '/../_filtros.php';
 ?>
 <div class="clean-card mb-4">

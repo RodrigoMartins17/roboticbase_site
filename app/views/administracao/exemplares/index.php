@@ -53,7 +53,10 @@
 // (o formulário em si está em app/views/administracao/_filtros.php).
 $filtrosAccao = 'admin/exemplares';
 $filtrosPlaceholder = 'Pesquisar por material, referência ou sala…';
-$filtrosSelects = ['estado' => ['label' => 'Estado', 'opcoes' => $estadosExemplar ?? []]];
+$filtrosSelects = [
+    'material' => ['label' => 'Material', 'opcoes' => $materiaisOpcoes ?? []],
+    'estado'   => ['label' => 'Estado',   'opcoes' => $estadosExemplar ?? []],
+];
 include __DIR__ . '/../_filtros.php';
 ?>
 <div class="clean-card">

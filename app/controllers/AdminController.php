@@ -115,9 +115,9 @@ class AdminController extends Controller
         $model = new Material();
         $todos = $model->attachImagemSrc($model->todosModelos());
 
-        // Pesquisa pela designação do material + páginas de 12.
+        // Pesquisa pela designação do material + páginas de 8.
         $filtrados = $this->aplicarFiltros($todos, ['designacao']);
-        $paginacao = $this->paginar($filtrados, 12);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/materiais/index', [
             'materiais' => $paginacao['itens'],
@@ -332,14 +332,16 @@ class AdminController extends Controller
             $sala = $stmt->fetch(PDO::FETCH_ASSOC);
             $e['sala_nome'] = $sala ? $sala['bloco'] . $sala['andar'] . '.' . $sala['numero'] : 'N/A';
         }
-        // Pesquisa pelo material ou nº de referência, dropdown do estado, páginas de 12.
-        $filtrados = $this->aplicarFiltros($exemplares, ['designacao', 'num_referencia', 'sala_nome'], ['estado' => 'estado']);
-        $paginacao = $this->paginar($filtrados, 12);
+        // Pesquisa pelo material ou nº de referência, dropdown do estado, páginas de 8.
+        $filtrados = $this->aplicarFiltros($exemplares, ['num_referencia', 'sala_nome'], ['estado' => 'estado', 'material' => 'designacao']);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/exemplares/index', [
             'exemplares' => $paginacao['itens'],
             'paginacao'  => $paginacao,
             'estadosExemplar' => $this->opcoesDe($exemplares, 'estado'),
+            // Lista dos materiais que existem, para o dropdown "Material".
+            'materiaisOpcoes' => $this->opcoesDe($exemplares, 'designacao'),
             'materialFiltro' => null,
         ], 'Exemplares', 'exemplares');
     }
@@ -582,9 +584,9 @@ class AdminController extends Controller
         $model = new Categoria();
         $todas = $model->all();
 
-        // Pesquisa pelo nome da categoria + páginas de 12.
+        // Pesquisa pelo nome da categoria + páginas de 8.
         $filtradas = $this->aplicarFiltros($todas, ['categoria']);
-        $paginacao = $this->paginar($filtradas, 12);
+        $paginacao = $this->paginar($filtradas, 8);
 
         $this->viewAdmin('administracao/categorias/index', [
             'categorias' => $paginacao['itens'],
@@ -684,9 +686,9 @@ class AdminController extends Controller
         $model = new Sala();
         $todas = $model->todas();
 
-        // Pesquisa por bloco/número, dropdown do estado, páginas de 12.
+        // Pesquisa por bloco/número, dropdown do estado, páginas de 8.
         $filtradas = $this->aplicarFiltros($todas, ['bloco', 'numero', 'andar'], ['estado' => 'estado']);
-        $paginacao = $this->paginar($filtradas, 12);
+        $paginacao = $this->paginar($filtradas, 8);
 
         $this->viewAdmin('administracao/salas/index', [
             'salas'        => $paginacao['itens'],
@@ -918,9 +920,9 @@ class AdminController extends Controller
         $todos = $model->all();
 
         // Filtro pela pesquisa (nome ou email) e pelo dropdown do tipo de conta,
-        // e depois parto o resultado em páginas de 12.
+        // e depois parto o resultado em páginas de 8.
         $filtrados = $this->aplicarFiltros($todos, ['nome', 'email'], ['tipo' => 'tipo']);
-        $paginacao = $this->paginar($filtrados, 12);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/utilizadores/index', [
             'users'     => $paginacao['itens'],
@@ -1131,8 +1133,8 @@ class AdminController extends Controller
         // As filas de trabalho (pendentes/aceites) ficam sempre completas à vista;
         // os filtros e a paginação aplicam-se ao HISTÓRICO, que é o que cresce.
         $historicoTodos = $reqMat->historico();
-        $filtrados = $this->aplicarFiltros($historicoTodos, ['utilizador_nome', 'material_designacao', 'num_referencia'], ['estado' => 'estado_pedido']);
-        $paginacao = $this->paginar($filtrados, 10);
+        $filtrados = $this->aplicarFiltros($historicoTodos, ['material_designacao', 'num_referencia'], ['estado' => 'estado_pedido', 'utilizador' => 'utilizador_nome']);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/requisicoes_materiais/index', [
             'pendentes'  => $reqMat->pendentes(),
@@ -1140,6 +1142,8 @@ class AdminController extends Controller
             'historico'  => $paginacao['itens'],
             'paginacao'  => $paginacao,
             'estadosReq' => $this->opcoesDe($historicoTodos, 'estado_pedido'),
+            // Utilizadores que aparecem no histórico, para o dropdown "Utilizador".
+            'utilizadoresReq' => $this->opcoesDe($historicoTodos, 'utilizador_nome'),
         ], 'Requisições Materiais', 'req_materiais');
     }
 
@@ -1408,8 +1412,8 @@ class AdminController extends Controller
         $reqSala = new RequisicaoSala();
         // Igual às requisições de material: filtros/paginação só no histórico.
         $historicoTodos = $reqSala->historico();
-        $filtrados = $this->aplicarFiltros($historicoTodos, ['utilizador_nome', 'sala_numero', 'bloco'], ['estado' => 'estado_sala']);
-        $paginacao = $this->paginar($filtrados, 10);
+        $filtrados = $this->aplicarFiltros($historicoTodos, ['sala_numero', 'bloco'], ['estado' => 'estado_sala', 'utilizador' => 'utilizador_nome']);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/requisicoes_salas/index', [
             'pendentes'  => $reqSala->pendentes(),
@@ -1417,6 +1421,8 @@ class AdminController extends Controller
             'historico'  => $paginacao['itens'],
             'paginacao'  => $paginacao,
             'estadosReq' => $this->opcoesDe($historicoTodos, 'estado_sala'),
+            // Utilizadores que aparecem no histórico, para o dropdown "Utilizador".
+            'utilizadoresReq' => $this->opcoesDe($historicoTodos, 'utilizador_nome'),
         ], 'Requisições Salas', 'req_salas');
     }
 
@@ -1720,9 +1726,9 @@ class AdminController extends Controller
         $model = new PortfolioEvento();
         $todos = $model->todos();
 
-        // Pesquisa pelo título do evento + páginas de 12.
+        // Pesquisa pelo título do evento + páginas de 8.
         $filtrados = $this->aplicarFiltros($todos, ['titulo']);
-        $paginacao = $this->paginar($filtrados, 12);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/eventos/index', [
             'eventos'   => $paginacao['itens'],
@@ -1912,9 +1918,9 @@ public function apiHorariosOcupados() {
         // e paginação — a pessoa consegue navegar sem a página ficar pesada.
         $todos = $logModel->acessos(2000);
 
-        // Pesquisa pela descrição/nome/email + dropdown do tipo de log, páginas de 20.
+        // Pesquisa pela descrição/nome/email + dropdown do tipo de log, páginas de 8.
         $filtrados = $this->aplicarFiltros($todos, ['descricao', 'utilizador_nome', 'utilizador_email'], ['tipo' => 'tipo']);
-        $paginacao = $this->paginar($filtrados, 20);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/logs/index', [
             'acessos'    => $paginacao['itens'],
@@ -1931,9 +1937,9 @@ public function apiHorariosOcupados() {
         $logModel = new Log();
         $todos = $logModel->erros(2000);
 
-        // Pesquisa pela mensagem/origem + dropdown da origem do erro, páginas de 20.
+        // Pesquisa pela mensagem/origem + dropdown da origem do erro, páginas de 8.
         $filtrados = $this->aplicarFiltros($todos, ['mensagem', 'origem', 'utilizador_nome'], ['origem' => 'origem']);
-        $paginacao = $this->paginar($filtrados, 20);
+        $paginacao = $this->paginar($filtrados, 8);
 
         $this->viewAdmin('administracao/logs/erros', [
             'erros'         => $paginacao['itens'],
