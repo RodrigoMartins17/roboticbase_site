@@ -1,4 +1,6 @@
 <?php
+// Em producao nao mostro avisos do PHP aos visitantes (ficam so nos logs).
+ini_set('display_errors', '0');
 // Ponte para o Vercel: no XAMPP e o .htaccess que mete o caminho no
 // parametro "url"; no Vercel sou eu a faze-lo aqui, a partir do URL pedido.
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
