@@ -30,7 +30,18 @@ class Mailer
 
     public static function send(string $to, string $subject, string $html): bool
     {
-        if (empty($to) || empty(SMTP_HOST) || empty(SMTP_USER) || empty(SMTP_PASS)) {
+        if (empty($to)) {
+            return false;
+        }
+
+        // No Vercel o SMTP está bloqueado, por isso lá uso a API HTTP do Brevo.
+        // Basta existir a variável de ambiente BREVO_API_KEY. No XAMPP local
+        // ela não existe e o envio continua a ser feito por SMTP (Gmail).
+        if (getenv('BREVO_API_KEY')) {
+            return self::sendViaBrevo($to, $subject, $html);
+        }
+
+        if (empty(SMTP_HOST) || empty(SMTP_USER) || empty(SMTP_PASS)) {
             return false;
         }
 
@@ -138,6 +149,37 @@ class Mailer
         self::smtpWrite($socket, 'QUIT');
         fclose($socket);
         return true;
+    }
+
+    // Envio por HTTP através da API do Brevo (usado no Vercel, onde o SMTP
+    // está bloqueado). O remetente tem de estar verificado na conta Brevo.
+    private static function sendViaBrevo(string $to, string $subject, string $html): bool
+    {
+        $payload = json_encode([
+            'sender'      => ['name' => SMTP_FROM_NAME, 'email' => SMTP_FROM_EMAIL],
+            'to'          => [['email' => $to]],
+            'subject'     => $subject,
+            'htmlContent' => $html,
+        ]);
+
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_HTTPHEADER     => [
+                'accept: application/json',
+                'content-type: application/json',
+                'api-key: ' . getenv('BREVO_API_KEY'),
+            ],
+        ]);
+        curl_exec($ch);
+        $codigo = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 2xx = aceite pelo Brevo.
+        return $codigo >= 200 && $codigo < 300;
     }
 
     // ---------------------------------------------------------------------
