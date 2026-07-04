@@ -115,5 +115,6 @@ $old = $old ?? [];  // dados que o utilizador já tinha escrito (vêm do control
             </div>
         </div>
     </div>
+<script src="<?php echo BASE_URL; ?>js/rb-loading.js"></script>
 </body>
 </html>

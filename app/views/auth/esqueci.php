@@ -56,5 +56,6 @@ require_once __DIR__ . '/../../config/config.php';
             <div class="foot"><a href="<?php echo BASE_URL; ?>auth/login"><i class="fas fa-arrow-left"></i> Voltar ao login</a></div>
         </div>
     </div>
+<script src="<?php echo BASE_URL; ?>js/rb-loading.js"></script>
 </body>
 </html>

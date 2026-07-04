@@ -178,5 +178,6 @@ $sec = $admin_section ?? '';
         document.getElementById('sidebar').classList.toggle('active');
     });
 </script>
+<script src="<?php echo BASE_URL; ?>js/rb-loading.js"></script>
 </body>
 </html>

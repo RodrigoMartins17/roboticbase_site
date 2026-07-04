@@ -13,9 +13,10 @@ class HomeController extends Controller
         $portfolioModel = new PortfolioEvento();
         $eventos = $portfolioModel->todos();
 
-        // E também os professores, para a secção da equipa.
+        // E também a equipa — só os professores RESPONSÁVEIS pelo clube,
+        // igual ao que o dashboard mostra depois do login.
         $utilizadorModel = new Utilizador();
-        $professores = $utilizadorModel->professores();
+        $professores = $utilizadorModel->professoresResponsaveis();
 
         // A home mostra o MESMO conteúdo do dashboard (mesma view). O header sabe
         // que não há sessão e mostra o botão "Entrar" em vez do avatar.

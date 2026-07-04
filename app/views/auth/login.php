@@ -74,5 +74,6 @@ require_once __DIR__ . '/../../config/config.php';
             <div class="foot" style="margin-top:0.5rem;">Ainda não tens conta? <a href="<?php echo BASE_URL; ?>auth/register">Criar conta</a></div>
         </div>
     </div>
+<script src="<?php echo BASE_URL; ?>js/rb-loading.js"></script>
 </body>
 </html>

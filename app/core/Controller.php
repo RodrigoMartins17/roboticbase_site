@@ -126,8 +126,62 @@ class Controller
             return null;
         }
 
-        // Se chegou aqui, está tudo bem: devolvo o conteúdo da imagem.
+        // Antes de guardar, encolho a imagem: fotos de telemóvel têm vários MB
+        // e não precisamos disso para um avatar/miniatura. Reduzo para no máximo
+        // 800px e comprimo em JPEG — fica leve, a página carrega mais depressa
+        // e cabe folgadamente na base de dados.
+        $comprimida = $this->compressImage($tmpPath, $imageInfo);
+        if ($comprimida !== null) {
+            return $comprimida;
+        }
+
+        // Se a compressão falhar (ex: GD sem suporte ao formato), devolvo o original.
         return file_get_contents($tmpPath) ?: null;
+    }
+
+    // Reduz uma imagem para caber num quadrado de 800x800 (mantendo proporções)
+    // e devolve-a comprimida em JPEG. Devolve null se não conseguir.
+    protected function compressImage(string $path, array $imageInfo, int $maxLado = 800, int $qualidade = 82): ?string
+    {
+        if (!function_exists('imagecreatetruecolor')) {
+            return null; // extensão GD não disponível
+        }
+
+        [$larg, $alt] = $imageInfo;
+        if ($larg < 1 || $alt < 1) {
+            return null;
+        }
+
+        // Abro a imagem consoante o formato real dela.
+        $origem = match ($imageInfo[2]) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($path),
+            IMAGETYPE_PNG  => @imagecreatefrompng($path),
+            IMAGETYPE_GIF  => @imagecreatefromgif($path),
+            IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($path) : false,
+            default        => false,
+        };
+        if (!$origem) {
+            return null;
+        }
+
+        // Calculo o novo tamanho (só encolho, nunca amplio).
+        $escala = min(1, $maxLado / max($larg, $alt));
+        $novaLarg = max(1, (int)round($larg * $escala));
+        $novaAlt  = max(1, (int)round($alt * $escala));
+
+        $destino = imagecreatetruecolor($novaLarg, $novaAlt);
+        // Fundo branco para imagens com transparência (o JPEG não tem transparência).
+        $branco = imagecolorallocate($destino, 255, 255, 255);
+        imagefill($destino, 0, 0, $branco);
+        imagecopyresampled($destino, $origem, 0, 0, 0, 0, $novaLarg, $novaAlt, $larg, $alt);
+        imagedestroy($origem);
+
+        ob_start();
+        $ok = imagejpeg($destino, null, $qualidade);
+        $dados = ob_get_clean();
+        imagedestroy($destino);
+
+        return ($ok && $dados !== false && $dados !== '') ? $dados : null;
     }
 
     // Diz-me se a pessoa enviou mesmo um ficheiro no formulário ou se deixou vazio.
@@ -179,6 +233,85 @@ class Controller
     {
         header('Location: ' . BASE_URL . ltrim($path, '/'));
         exit;
+    }
+
+    // -----------------------------------------------------------------
+    //  FILTROS E PAGINAÇÃO das listas da administração
+    // -----------------------------------------------------------------
+    // Como as listas do clube são pequenas (dezenas/centenas de registos),
+    // vou buscar tudo à base de dados e filtro/pagino aqui em PHP.
+    // Assim uso EXATAMENTE o mesmo código em todas as páginas da administração
+    // em vez de reescrever SQL diferente para cada tabela.
+
+    // Filtra uma lista de registos conforme o que está no URL ($_GET):
+    // - 'q' é a pesquisa por texto: comparo com os campos indicados em $camposTexto
+    //   (ex: nome e email), sem ligar a maiúsculas/minúsculas.
+    // - $camposExatos são os filtros tipo "dropdown" (ex: tipo=ALUNO): o valor
+    //   do registo tem de ser IGUAL ao escolhido. Se estiver vazio, não filtro.
+    protected function aplicarFiltros(array $itens, array $camposTexto, array $camposExatos = []): array
+    {
+        $q = mb_strtolower(trim((string)($_GET['q'] ?? '')));
+
+        return array_values(array_filter($itens, function ($item) use ($q, $camposTexto, $camposExatos) {
+            // 1) Pesquisa por texto: basta UM dos campos conter o que se escreveu.
+            if ($q !== '') {
+                $encontrou = false;
+                foreach ($camposTexto as $campo) {
+                    if (mb_stripos((string)($item[$campo] ?? ''), $q) !== false) {
+                        $encontrou = true;
+                        break;
+                    }
+                }
+                if (!$encontrou) {
+                    return false; // não bate com a pesquisa → sai da lista
+                }
+            }
+
+            // 2) Filtros exatos (dropdowns): todos os escolhidos têm de bater certo.
+            foreach ($camposExatos as $param => $campo) {
+                $valor = trim((string)($_GET[$param] ?? ''));
+                if ($valor !== '' && (string)($item[$campo] ?? '') !== $valor) {
+                    return false;
+                }
+            }
+
+            return true; // passou em tudo → fica na lista
+        }));
+    }
+
+    // Divide a lista em páginas e devolve só a página pedida no URL (?pagina=N).
+    // Devolve também a informação que o paginador da view precisa para desenhar
+    // os botões: página atual, total de páginas e total de registos.
+    protected function paginar(array $itens, int $porPagina = 12): array
+    {
+        $total        = count($itens);
+        $totalPaginas = max(1, (int)ceil($total / $porPagina));
+
+        // Leio a página do URL e prendo-a entre 1 e a última (para não dar asneira
+        // se alguém escrever ?pagina=999 ou ?pagina=-3 à mão).
+        $pagina = (int)($_GET['pagina'] ?? 1);
+        $pagina = max(1, min($pagina, $totalPaginas));
+
+        return [
+            'itens'        => array_slice($itens, ($pagina - 1) * $porPagina, $porPagina),
+            'pagina'       => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'total'        => $total,
+            'porPagina'    => $porPagina,
+        ];
+    }
+
+    // Vai buscar os valores DIFERENTES de um campo (ex: todos os tipos de log
+    // que existem) para encher as opções de um dropdown de filtro.
+    // Assim as opções nascem dos dados reais e nunca ficam desatualizadas.
+    protected function opcoesDe(array $itens, string $campo): array
+    {
+        $valores = array_filter(array_unique(array_map(
+            fn($item) => (string)($item[$campo] ?? ''),
+            $itens
+        )), fn($v) => $v !== '');
+        sort($valores);
+        return $valores;
     }
 
     // Mostra uma página dentro do painel de administração (com a barra lateral).

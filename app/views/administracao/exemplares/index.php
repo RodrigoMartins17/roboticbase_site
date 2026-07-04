@@ -48,6 +48,14 @@
 </div>
 <?php endif; ?>
 
+<?php
+// Barra de filtros partilhada por todas as listas da administração
+// (o formulário em si está em app/views/administracao/_filtros.php).
+$filtrosAccao = 'admin/exemplares';
+$filtrosPlaceholder = 'Pesquisar por material, referência ou sala…';
+$filtrosSelects = ['estado' => ['label' => 'Estado', 'opcoes' => $estadosExemplar ?? []]];
+include __DIR__ . '/../_filtros.php';
+?>
 <div class="clean-card">
     <div class="table-responsive">
         <?php if (empty($exemplares)): ?>
@@ -111,3 +119,8 @@
         <?php endif; ?>
     </div>
 </div>
+
+<?php
+// Botões das páginas (partilhados — ver app/views/administracao/_paginacao.php).
+include __DIR__ . '/../_paginacao.php';
+?>

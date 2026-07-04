@@ -25,6 +25,14 @@
     </a>
 </div>
 
+<?php
+// Barra de filtros partilhada por todas as listas da administração
+// (o formulário em si está em app/views/administracao/_filtros.php).
+$filtrosAccao = 'admin/categorias';
+$filtrosPlaceholder = 'Pesquisar por nome…';
+$filtrosSelects = []; // esta lista só tem pesquisa por texto
+include __DIR__ . '/../_filtros.php';
+?>
 <div class="clean-card">
     <div class="table-responsive">
         <?php if (empty($categorias)): ?>
@@ -67,3 +75,8 @@
         <?php endif; ?>
     </div>
 </div>
+
+<?php
+// Botões das páginas (partilhados — ver app/views/administracao/_paginacao.php).
+include __DIR__ . '/../_paginacao.php';
+?>

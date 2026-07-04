@@ -142,9 +142,17 @@ $renderTableRows = function ($items) use ($salaLabel) {
     </div>
 </div>
 
+<?php
+// Barra de filtros partilhada por todas as listas da administração
+// (o formulário em si está em app/views/administracao/_filtros.php).
+$filtrosAccao = 'admin/requisicoesSalas';
+$filtrosPlaceholder = 'Pesquisar por utilizador ou sala…';
+$filtrosSelects = ['estado' => ['label' => 'Estado', 'opcoes' => $estadosReq ?? []]];
+include __DIR__ . '/../_filtros.php';
+?>
 <div class="clean-card mb-4">
     <div class="px-4 py-3 border-bottom" style="background-color: #f8fafc;">
-        <h6 class="mb-0 fw-bold" style="color: #334155;"><i class="fas fa-archive text-secondary me-2"></i> Histórico <span class="badge bg-secondary ms-2"><?php echo count($historico ?? []); ?></span></h6>
+        <h6 class="mb-0 fw-bold" style="color: #334155;"><i class="fas fa-archive text-secondary me-2"></i> Histórico <span class="badge bg-secondary ms-2"><?php echo (int)($paginacao['total'] ?? 0); ?></span></h6>
     </div>
     <div class="table-responsive">
         <table class="table table-borderless table-clean mb-0">
@@ -164,3 +172,8 @@ $renderTableRows = function ($items) use ($salaLabel) {
         </table>
     </div>
 </div>
+
+<?php
+// Botões das páginas (partilhados — ver app/views/administracao/_paginacao.php).
+include __DIR__ . '/../_paginacao.php';
+?>

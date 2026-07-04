@@ -40,6 +40,14 @@ function estiloLog($tipo) {
     <a class="log-tab" href="<?php echo BASE_URL; ?>admin/logsErros"><i class="fas fa-triangle-exclamation"></i> Erros <span class="cnt"><?php echo (int)$totalErros; ?></span></a>
 </div>
 
+<?php
+// Barra de filtros partilhada por todas as listas da administração
+// (o formulário em si está em app/views/administracao/_filtros.php).
+$filtrosAccao = 'admin/logs';
+$filtrosPlaceholder = 'Pesquisar na descrição, nome ou email…';
+$filtrosSelects = ['tipo' => ['label' => 'Tipo', 'opcoes' => $tiposLog ?? []]];
+include __DIR__ . '/../_filtros.php';
+?>
 <div class="clean-card">
     <div class="table-responsive">
         <table class="table table-borderless table-clean mb-0">
@@ -75,3 +83,8 @@ function estiloLog($tipo) {
         </table>
     </div>
 </div>
+
+<?php
+// Botões das páginas (partilhados — ver app/views/administracao/_paginacao.php).
+include __DIR__ . '/../_paginacao.php';
+?>
