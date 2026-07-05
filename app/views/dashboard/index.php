@@ -897,6 +897,21 @@ $isAluno = Auth::isAluno();
                     <div class="location-item">
                         <h5>ES Dr. Francisco Fernandes Lopes</h5>
                         <p>Av. Dr. Francisco Sá Carneiro<br>8700-853 Olhão</p>
+                        <!-- Botões que abrem o Google Maps já centrado na escola:
+                             um para ver o local, outro para obter direções desde
+                             onde a pessoa estiver. -->
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                            <a href="https://www.google.com/maps/search/?api=1&amp;query=Escola+Secund%C3%A1ria+Dr.+Francisco+Fernandes+Lopes%2C+Olh%C3%A3o"
+                               target="_blank" rel="noopener" data-no-loading
+                               style="display:inline-flex;align-items:center;gap:8px;background:#0066ff;color:#fff;padding:9px 16px;border-radius:10px;font-weight:600;font-size:0.9rem;text-decoration:none;">
+                                <i class="fas fa-map-marker-alt"></i> Abrir no Maps
+                            </a>
+                            <a href="https://www.google.com/maps/dir/?api=1&amp;destination=Escola+Secund%C3%A1ria+Dr.+Francisco+Fernandes+Lopes%2C+Olh%C3%A3o"
+                               target="_blank" rel="noopener" data-no-loading
+                               style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:#8ab4f8;border:1px solid rgba(138,180,248,.5);padding:9px 16px;border-radius:10px;font-weight:600;font-size:0.9rem;text-decoration:none;">
+                                <i class="fas fa-route"></i> Como chegar
+                            </a>
+                        </div>
                     </div>
                     
                     <div class="location-item">
