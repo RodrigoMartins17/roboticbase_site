@@ -18,5 +18,3 @@ class Exemplar extends Model
         return $stmt->execute([$id]);
     }
 }
-?>
-
