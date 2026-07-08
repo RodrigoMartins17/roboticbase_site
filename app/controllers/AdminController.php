@@ -2080,9 +2080,22 @@ public function apiHorariosOcupados() {
             'visita'      => 'fieldtrip',
             // salas
             'laborat'     => 'laboratory',
+            'informatica' => 'computerlab',
+            'informática' => 'computerlab',
+            'redes'       => 'serverroom',
+            'servidor'    => 'serverroom',
             'auditor'     => 'auditorium',
-            'armaz'       => 'storageroom',
-            'oficina'     => 'workshop',
+            'armaz'       => 'warehouse',
+            'arrecada'    => 'warehouse',
+            'estudio'     => 'recordingstudio',
+            'estúdio'     => 'recordingstudio',
+            'gravacao'    => 'recordingstudio',
+            'gravação'    => 'recordingstudio',
+            'multimedia'  => 'recordingstudio',
+            'reuni'       => 'meetingroom',
+            'oficina'     => 'mechanicworkshop',
+            'mecanica'    => 'mechanicworkshop',
+            'mecânica'    => 'mechanicworkshop',
             'biblioteca'  => 'library',
         ];
 
@@ -2136,10 +2149,10 @@ public function apiHorariosOcupados() {
             $rows = $db->query("SELECT id, COALESCE(`$colNome`, '') AS nome FROM `$tabela` WHERE `$colImg` IS NULL OR LENGTH(`$colImg`) = 0")->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
                 $termo = $termoPara((string)$r['nome'], $tema);
-                $foto  = $descarregar($termo, $larg, $alt, (int)$r['id'] + crc32($tabela));
+                $foto  = $descarregar($termo, $larg, $alt, random_int(1, 999999));
                 if ($foto === null) {
                     // 2.ª tentativa só com o tema por defeito (termo raro sem fotos).
-                    $foto = $descarregar($tema, $larg, $alt, (int)$r['id'] + crc32($tabela) + 7);
+                    $foto = $descarregar($tema, $larg, $alt, random_int(1, 999999));
                 }
                 if ($foto === null) {
                     continue;
