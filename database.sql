@@ -667,7 +667,7 @@ BEGIN CALL sp_valida_sala(NEW.numero, NEW.capacidade,NEW.andar, NEW.bloco); END$
 
 USE `clube_robotica`$$
 CREATE TRIGGER trg_sala_before_update BEFORE UPDATE ON sala FOR EACH ROW
-BEGIN CALL sp_valida_sala(NEW.numero, NEW.capacidade, NEW.bloco,NEW.andar); END$$
+BEGIN CALL sp_valida_sala(NEW.numero, NEW.capacidade, NEW.andar, NEW.bloco); END$$
 
 USE `clube_robotica`$$
 CREATE TRIGGER trg_ex_sala_before_insert BEFORE INSERT ON exemplar_sala FOR EACH ROW

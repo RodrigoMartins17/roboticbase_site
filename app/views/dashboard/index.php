@@ -851,7 +851,7 @@ $isAluno = Auth::isAluno();
                         $hiddenClass = $contador > 3 ? 'd-none d-hidden-event' : '';
                         
                         // Configuração das Imagens vindas da BD (blob ou url de fallback)
-                        $imgUrl = !empty($evento['imagem_url']) ? htmlspecialchars($evento['imagem_url']) : (!empty($evento['imagem_src']) ? htmlspecialchars($evento['imagem_src']) : BASE_URL . 'uploads/fundo_site.jpg');
+                        $imgUrl = !empty($evento['imagem_src']) ? $evento['imagem_src'] : BASE_URL . 'uploads/fundo_site.jpg';
                     ?>
                         <div class="col-md-6 col-lg-4 <?php echo $hiddenClass; ?>">
                             <div class="rb-card rb-event-card h-100 d-flex flex-column">
