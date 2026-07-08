@@ -2143,10 +2143,16 @@ public function apiHorariosOcupados() {
             ['sala',      'imagem',     'descricao',  'classroom',   800, 450],
         ];
 
+        // Modo normal: só preenche registos SEM imagem.
+        // Com /admin/seedImagens?forcar=1 substitui TODAS as imagens, para
+        // garantir que ficam todas relacionadas com o nome do registo.
+        $forcar = !empty($_GET['forcar']);
+
         $resumo = [];
         foreach ($alvos as [$tabela, $colImg, $colNome, $tema, $larg, $alt]) {
             $feitos = 0;
-            $rows = $db->query("SELECT id, COALESCE(`$colNome`, '') AS nome FROM `$tabela` WHERE `$colImg` IS NULL OR LENGTH(`$colImg`) = 0")->fetchAll(PDO::FETCH_ASSOC);
+            $condicao = $forcar ? '1=1' : "`$colImg` IS NULL OR LENGTH(`$colImg`) = 0";
+            $rows = $db->query("SELECT id, COALESCE(`$colNome`, '') AS nome FROM `$tabela` WHERE $condicao")->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
                 $termo = $termoPara((string)$r['nome'], $tema);
                 $foto  = $descarregar($termo, $larg, $alt, random_int(1, 999999));
