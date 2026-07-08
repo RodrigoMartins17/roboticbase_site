@@ -22,7 +22,7 @@
                 </div>
             <?php endif; ?>
 
-            <form id="createForm" method="post" action="<?php echo BASE_URL; ?>admin/salaStore">
+            <form id="createForm" method="post" action="<?php echo BASE_URL; ?>admin/salaStore" enctype="multipart/form-data">
                 
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
@@ -56,6 +56,12 @@
                     </select>
                 </div>
 
+
+                <div class="mb-4">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; display: block;">Fotografia da Sala (Opcional)</label>
+                    <!-- A foto é comprimida no servidor e guardada na base de dados. -->
+                    <input type="file" name="imagem" accept="image/*" class="form-control-clean">
+                </div>
                 <div class="mb-5">
                     <label style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; display: block;">Descrição (Opcional)</label>
                     <textarea name="descricao" class="form-control-clean" rows="3" placeholder="Informações adicionais sobre a sala..."></textarea>

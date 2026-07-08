@@ -17,8 +17,10 @@ class Sala extends Model
 
     public function create(array $data)
     {
-        $sql = "INSERT INTO sala (numero, andar, bloco, capacidade, descricao, estado)
-                VALUES (:numero, :andar, :bloco, :capacidade, :descricao, :estado)";
+        // A imagem é opcional — se não vier, guardo NULL.
+        $data['imagem'] = $data['imagem'] ?? null;
+        $sql = "INSERT INTO sala (numero, andar, bloco, capacidade, descricao, estado, imagem)
+                VALUES (:numero, :andar, :bloco, :capacidade, :descricao, :estado, :imagem)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($data);
     }
@@ -26,13 +28,16 @@ class Sala extends Model
     public function updateById(int $id, array $data)
     {
         $data['id'] = $id;
+        $data['imagem'] = $data['imagem'] ?? null;
+        // COALESCE: se não enviaram imagem nova (NULL), mantém-se a que já lá estava.
         $sql = "UPDATE sala
                 SET numero = :numero,
                     andar = :andar,
                     bloco = :bloco,
                     capacidade = :capacidade,
                     descricao = :descricao,
-                    estado = :estado
+                    estado = :estado,
+                    imagem = COALESCE(:imagem, imagem)
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($data);

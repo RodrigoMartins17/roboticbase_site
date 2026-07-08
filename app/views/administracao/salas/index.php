@@ -56,7 +56,12 @@ include __DIR__ . '/../_filtros.php';
                     <td class="ps-4"><?php echo htmlspecialchars($s['id']); ?></td>
                     <td>
                         <div class="d-flex align-items-center gap-3">
-                            <div style="width: 36px; height: 36px; border-radius: 8px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i class="fas fa-door-open"></i></div>
+                            <?php if (!empty($s['imagem'])): ?>
+                                <!-- Miniatura da foto da sala (vem da base de dados) -->
+                                <img src="data:image/jpeg;base64,<?php echo base64_encode($s['imagem']); ?>" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;" alt="Sala">
+                            <?php else: ?>
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i class="fas fa-door-open"></i></div>
+                            <?php endif; ?>
                             <strong>Sala <?php echo htmlspecialchars(($s['bloco'] ?? '') . ($s['andar'] ?? '') . '.' . ($s['numero'] ?? '')); ?></strong>
                         </div>
                     </td>

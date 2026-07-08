@@ -33,6 +33,14 @@ class AdminController extends Controller
             'Requisição de ' . $tipoReq . ' #' . $id . ' -> ' . $estadoLabel . ' (utilizador: ' . $nome . ')');
     }
 
+    // Regista uma ação do admin no log de auditoria (quem fez o quê).
+    // Uso isto nas criações e eliminações de registos do painel.
+    private function registarAcao(string $tipo, string $descricao): void
+    {
+        $admin = Auth::user();
+        (new Log())->registar(isset($admin['id']) ? (int)$admin['id'] : null, $tipo, $descricao);
+    }
+
     private function requireAdmin()
     {
         Auth::requireLogin();
@@ -181,6 +189,8 @@ class AdminController extends Controller
             ], 'Novo Material', 'materiais');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Material criado: ' . ($_POST['designacao'] ?? '?'));
         $this->redirect('admin/materiais');
     }
 
@@ -316,6 +326,8 @@ class AdminController extends Controller
             ], 'Eliminar Material', 'materiais');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Material eliminado (id ' . (int)$id . ')');
         $this->redirect('admin/materiais');
     }
 
@@ -435,7 +447,9 @@ class AdminController extends Controller
         if ($idMaterial) {
             $this->redirect('admin/exemplaresPorMaterial/' . $idMaterial);
         } else {
-            $this->redirect('admin/exemplares');
+            // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Exemplar criado: ' . ($_POST['num_referencia'] ?? '?'));
+        $this->redirect('admin/exemplares');
         }
     }
        
@@ -540,6 +554,8 @@ class AdminController extends Controller
             ], 'Eliminar Exemplar', 'exemplares');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Exemplar eliminado (id ' . (int)$id . ')');
         $this->redirect('admin/exemplares');
     }
 
@@ -630,6 +646,8 @@ class AdminController extends Controller
             ], 'Nova Categoria', 'categorias');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Categoria criada: ' . ($_POST['categoria'] ?? $_POST['nome'] ?? '?'));
         $this->redirect('admin/categorias');
     }
 
@@ -761,6 +779,8 @@ class AdminController extends Controller
         }
 
         // Volta para a lista de categorias com sucesso
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Categoria eliminada (id ' . (int)$id . ')');
         $this->redirect('admin/categorias');
     }
 
@@ -777,6 +797,8 @@ class AdminController extends Controller
             $this->redirect('admin/salas');
             return;
         }
+        // Foto da sala (opcional). O readImageBlob valida e comprime.
+        $imagemBlob = isset($_FILES['imagem']) ? $this->readImageBlob($_FILES['imagem']) : null;
         $data = [
             'numero'     => trim($_POST['numero'] ?? ''),
             'andar'      => (int)($_POST['andar'] ?? 0),
@@ -784,6 +806,7 @@ class AdminController extends Controller
             'capacidade' => (int)($_POST['capacidade'] ?? 0),
             'descricao'  => trim($_POST['descricao'] ?? null) ?: null,
             'estado'     => $_POST['estado'] ?? 'DISPONIVEL',
+            'imagem'     => $imagemBlob,
         ];
         if (empty($data['numero']) || empty($data['bloco'])) {
             $this->viewAdmin('administracao/salas/create', [
@@ -802,6 +825,8 @@ class AdminController extends Controller
             ], 'Nova Sala', 'salas');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Sala criada: ' . ($_POST['bloco'] ?? '') . ($_POST['andar'] ?? '') . '.' . ($_POST['numero'] ?? ''));
         $this->redirect('admin/salas');
     }
 
@@ -827,6 +852,8 @@ class AdminController extends Controller
         }
         $model = new Sala();
         $sala = $model->find((int)$id);
+        // Se enviaram foto nova leio-a; se não, fica NULL e o model mantém a antiga.
+        $imagemBlob = isset($_FILES['imagem']) ? $this->readImageBlob($_FILES['imagem']) : null;
         $data = [
             'numero'     => trim($_POST['numero'] ?? $sala['numero'] ?? ''),
             'andar'      => (int)($_POST['andar'] ?? $sala['andar'] ?? 0),
@@ -834,6 +861,7 @@ class AdminController extends Controller
             'capacidade' => (int)($_POST['capacidade'] ?? $sala['capacidade'] ?? 0),
             'descricao'  => trim($_POST['descricao'] ?? $sala['descricao'] ?? null) ?: null,
             'estado'     => $_POST['estado'] ?? $sala['estado'] ?? 'DISPONIVEL',
+            'imagem'     => $imagemBlob,
         ];
         if (empty($data['numero']) || empty($data['bloco'])) {
             $this->viewAdmin('administracao/salas/edit', [
@@ -920,6 +948,8 @@ class AdminController extends Controller
             return;
         }
 
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Sala eliminada (id ' . (int)$id . ')');
         $this->redirect('admin/salas');
     }
 
@@ -991,6 +1021,8 @@ class AdminController extends Controller
             ], 'Novo Utilizador', 'utilizadores');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Utilizador criado: ' . ($_POST['email'] ?? '?'));
         $this->redirect('admin/utilizadores');
     }
 
@@ -1137,6 +1169,8 @@ class AdminController extends Controller
             ], 'Eliminar Utilizador', 'utilizadores');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Utilizador eliminado (id ' . (int)$id . ')');
         $this->redirect('admin/utilizadores');
     }
 
@@ -1292,7 +1326,9 @@ class AdminController extends Controller
                     try { Mailer::sendStatusUpdate($u['email'], $u['nome'] ?? 'Utilizador', 'material', (int)$novoId, 'PENDENTE'); } catch (\Throwable $e) {}
                 }
             }
-            $this->redirect('admin/requisicoesMateriais');
+            // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Requisição de material criada pelo admin');
+        $this->redirect('admin/requisicoesMateriais');
         } catch (PDOException $e) {
             $materialModel = new Material();
             $utilizadorModel = new Utilizador();
@@ -1417,6 +1453,8 @@ class AdminController extends Controller
             ], 'Eliminar Requisição Material', 'req_materiais');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Requisição de material eliminada (id ' . (int)$id . ')');
         $this->redirect('admin/requisicoesMateriais');
     }
 
@@ -1583,7 +1621,9 @@ class AdminController extends Controller
                     try { Mailer::sendStatusUpdate($u['email'], $u['nome'] ?? 'Utilizador', 'sala', (int)$novoId, 'PENDENTE'); } catch (\Throwable $e) {}
                 }
             }
-            $this->redirect('admin/requisicoesSalas');
+            // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Requisição de sala criada pelo admin');
+        $this->redirect('admin/requisicoesSalas');
         } catch (PDOException $e) {
             $salaModel = new Sala();
             $utilizadorModel = new Utilizador();
@@ -1724,6 +1764,8 @@ class AdminController extends Controller
             ], 'Eliminar Requisição Sala', 'req_salas');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Requisição de sala eliminada (id ' . (int)$id . ')');
         $this->redirect('admin/requisicoesSalas');
     }
 
@@ -1784,6 +1826,8 @@ class AdminController extends Controller
             ], 'Novo Evento', 'eventos');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('CRIACAO', 'Evento criado: ' . ($_POST['titulo'] ?? '?'));
         $this->redirect('admin/eventos');
     }
 
@@ -1883,6 +1927,8 @@ class AdminController extends Controller
             ], 'Eliminar Evento', 'eventos');
             return;
         }
+        // Auditoria: fica registado quem fez esta operação e quando.
+        $this->registarAcao('ELIMINACAO', 'Evento eliminado (id ' . (int)$id . ')');
         $this->redirect('admin/eventos');
     }
 
@@ -1964,110 +2010,71 @@ public function apiHorariosOcupados() {
         ], 'Logs de Erros', 'logs_erros');
     }
 
+
     // -----------------------------------------------------------------
-    //  GERADOR DE IMAGENS DE EXEMPLO (usar uma vez e pronto)
+    //  IMAGENS DE EXEMPLO (fotografias reais, uma vez e pronto)
     // -----------------------------------------------------------------
-    // Percorre os eventos e materiais SEM imagem e desenha para cada um
-    // uma imagem simples com a extensão GD do PHP (gradiente com as cores
-    // do clube + o nome). Serve para o site não ficar com espaços vazios
-    // enquanto não há fotografias reais — depois basta editar o registo
-    // e carregar a fotografia verdadeira, que substitui esta.
-    // Como mexe na base de dados, só o admin pode correr isto, em:
-    //   /admin/gerarImagensExemplo
-    public function gerarImagensExemplo()
+    // Percorre eventos, materiais, categorias e salas SEM imagem e vai
+    // buscar uma fotografia real à internet (serviço gratuito LoremFlickr,
+    // que devolve fotos do Flickr por tema), comprime-a e guarda-a na base
+    // de dados. Correr uma vez em: /admin/seedImagens
+    // Depois, para pôr fotos verdadeiras, basta editar o registo no painel.
+    public function seedImagens()
     {
         $this->requireAdmin();
-        if (!function_exists('imagecreatetruecolor')) {
-            echo 'A extensão GD do PHP não está disponível.';
-            return;
-        }
+        @set_time_limit(120); // podem ser bastantes downloads
 
         $db = (new Material())->getDb();
 
-        // Paletas (fundo escuro -> cor de destaque), varia consoante o id.
-        $paletas = [
-            [[13, 17, 23],  [26, 115, 232]],  // azul
-            [[15, 23, 42],  [139, 92, 246]],  // roxo
-            [[7, 59, 76],   [14, 165, 233]],  // ciano
-            [[45, 20, 45],  [236, 72, 153]],  // rosa
-            [[16, 38, 28],  [22, 163, 74]],   // verde
-            [[55, 35, 12],  [245, 158, 11]],  // laranja
+        // O que preencher: tabela, coluna da imagem, coluna do nome,
+        // tema das fotos e tamanho a pedir.
+        $alvos = [
+            ['evento',    'imagem_url', 'titulo',     'robotics',   800, 450],
+            ['material',  'imagem',     'designacao', 'electronics', 640, 480],
+            ['categoria', 'imagem',     'categoria',  'technology', 480, 480],
+            ['sala',      'imagem',     'numero',     'classroom',  800, 450],
         ];
 
-        // Função que desenha UMA imagem e devolve o JPEG (em texto binário).
-        $desenhar = function (int $larg, int $alt, string $titulo, string $rodape, array $pal): string {
-            [$fundo, $cor] = $pal;
-            $img = imagecreatetruecolor($larg, $alt);
-
-            // 1) Fundo em gradiente vertical (do escuro para o destaque).
-            for ($y = 0; $y < $alt; $y++) {
-                $t = $y / max(1, $alt - 1) * 0.55; // só 55% do caminho, fica suave
-                $c = imagecolorallocate($img,
-                    (int)($fundo[0] + ($cor[0] - $fundo[0]) * $t),
-                    (int)($fundo[1] + ($cor[1] - $fundo[1]) * $t),
-                    (int)($fundo[2] + ($cor[2] - $fundo[2]) * $t));
-                imageline($img, 0, $y, $larg, $y, $c);
+        // Descarrega uma foto por HTTPS e devolve os bytes (ou null se falhar).
+        $descarregar = function (string $tema, int $larg, int $alt, int $semente): ?string {
+            // O ?random= faz com que cada registo receba uma foto diferente.
+            $url = "https://loremflickr.com/{$larg}/{$alt}/{$tema}?random={$semente}";
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true, // o serviço redireciona para a foto
+                CURLOPT_TIMEOUT        => 15,
+                CURLOPT_USERAGENT      => 'RoboticaXL-Seeder',
+            ]);
+            $dados = curl_exec($ch);
+            $codigo = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($dados === false || $codigo !== 200 || strlen($dados) < 1000) {
+                return null;
             }
-
-            // 2) Círculos decorativos translúcidos no canto.
-            $claro = imagecolorallocatealpha($img, $cor[0], $cor[1], $cor[2], 95);
-            imagefilledellipse($img, (int)($larg * 0.85), (int)($alt * 0.2), (int)($larg * 0.5), (int)($larg * 0.5), $claro);
-            imagefilledellipse($img, (int)($larg * 0.1), (int)($alt * 0.9), (int)($larg * 0.35), (int)($larg * 0.35), $claro);
-
-            // 3) O nome, em letras grandes. O GD só tem fontes pequenas
-            //    embutidas, por isso escrevo pequeno e amplio 3x (fica um
-            //    estilo "pixelizado" propositado, tipo retro/robótica).
-            $texto = mb_strimwidth($titulo, 0, 22, '…');
-            $texto = iconv('UTF-8', 'ASCII//TRANSLIT', $texto) ?: $texto; // a fonte do GD não tem acentos
-            $lt = imagefontwidth(5) * strlen($texto);
-            $at = imagefontheight(5);
-            $mini = imagecreatetruecolor(max(1, $lt), $at);
-            imagealphablending($mini, false);
-            $transp = imagecolorallocatealpha($mini, 0, 0, 0, 127);
-            imagefill($mini, 0, 0, $transp);
-            imagestring($mini, 5, 0, 0, $texto, imagecolorallocate($mini, 255, 255, 255));
-            $esc = 3;
-            imagealphablending($img, true);
-            imagecopyresized($img, $mini,
-                (int)(($larg - $lt * $esc) / 2), (int)($alt / 2 - $at * $esc / 2),
-                0, 0, $lt * $esc, $at * $esc, $lt, $at);
-            imagedestroy($mini);
-
-            // 4) Rodapé pequeno com a "marca".
-            $lr = imagefontwidth(3) * strlen($rodape);
-            imagestring($img, 3, (int)(($larg - $lr) / 2), $alt - 30, $rodape, imagecolorallocate($img, 220, 228, 240));
-
-            ob_start();
-            imagejpeg($img, null, 85);
-            imagedestroy($img);
-            return (string)ob_get_clean();
+            // Confirmo que é mesmo uma imagem antes de guardar.
+            return @imagecreatefromstring($dados) ? $dados : null;
         };
 
-        // Percorro cada tabela e preencho só os registos SEM imagem.
-        $feitos = ['eventos' => 0, 'materiais' => 0];
-
-        $eventos = $db->query("SELECT id, titulo FROM evento WHERE imagem_url IS NULL OR LENGTH(imagem_url) = 0")->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($eventos as $e) {
-            $jpeg = $desenhar(800, 450, (string)$e['titulo'], 'Evento · RoboticaXL', $paletas[(int)$e['id'] % count($paletas)]);
-            $stmt = $db->prepare("UPDATE evento SET imagem_url = ? WHERE id = ?");
-            $stmt->bindValue(1, $jpeg, PDO::PARAM_LOB);
-            $stmt->bindValue(2, (int)$e['id'], PDO::PARAM_INT);
-            $stmt->execute();
-            $feitos['eventos']++;
+        $resumo = [];
+        foreach ($alvos as [$tabela, $colImg, $colNome, $tema, $larg, $alt]) {
+            $feitos = 0;
+            $rows = $db->query("SELECT id, `$colNome` AS nome FROM `$tabela` WHERE `$colImg` IS NULL OR LENGTH(`$colImg`) = 0")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as $r) {
+                $foto = $descarregar($tema, $larg, $alt, (int)$r['id'] + crc32($tabela));
+                if ($foto === null) {
+                    continue; // sem internet/foto: fica para a próxima tentativa
+                }
+                $stmt = $db->prepare("UPDATE `$tabela` SET `$colImg` = ? WHERE id = ?");
+                $stmt->bindValue(1, $foto, PDO::PARAM_LOB);
+                $stmt->bindValue(2, (int)$r['id'], PDO::PARAM_INT);
+                $stmt->execute();
+                $feitos++;
+            }
+            $resumo[] = $tabela . ': ' . $feitos . ' de ' . count($rows);
         }
 
-        $materiais = $db->query("SELECT id, designacao FROM material WHERE imagem IS NULL OR LENGTH(imagem) = 0")->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($materiais as $m) {
-            $jpeg = $desenhar(640, 480, (string)$m['designacao'], 'Material · RoboticaXL', $paletas[(int)$m['id'] % count($paletas)]);
-            $stmt = $db->prepare("UPDATE material SET imagem = ? WHERE id = ?");
-            $stmt->bindValue(1, $jpeg, PDO::PARAM_LOB);
-            $stmt->bindValue(2, (int)$m['id'], PDO::PARAM_INT);
-            $stmt->execute();
-            $feitos['materiais']++;
-        }
-
-        // Resumo simples do que foi feito, com link de volta.
-        $this->setFlash('success', 'Imagens de exemplo criadas: ' . $feitos['eventos'] . ' evento(s) e ' . $feitos['materiais'] . ' materia(l/is).');
+        $this->setFlash('success', 'Imagens de exemplo aplicadas — ' . implode(' | ', $resumo));
         $this->redirect('admin/index');
     }
 

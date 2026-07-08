@@ -64,7 +64,11 @@ function imagemSala($descricao) {
         <?php foreach ($salas as $s):
             // Nome da sala no formato BLOCO+ANDAR.NÚMERO (ex: A1.02).
             $nome = ($s['bloco'] ?? '') . ($s['andar'] ?? '') . '.' . ($s['numero'] ?? '');
-            $imgSala = imagemSala($s['descricao'] ?? '');
+            // Se a sala tem fotografia na base de dados uso-a; senão mantém-se o
+            // desenho por tema (laboratório, auditório...) que já existia.
+            $imgSala = !empty($s['imagem'])
+                ? 'data:image/jpeg;base64,' . base64_encode($s['imagem'])
+                : imagemSala($s['descricao'] ?? '');
             // A sala está "disponível" quando o estado é DISPONIVEL (senão está em
             // manutenção, ocupada ou danificada = indisponível).
             $estadoSala = $s['estado'] ?? 'DISPONIVEL';
