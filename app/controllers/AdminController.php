@@ -2011,38 +2011,105 @@ public function apiHorariosOcupados() {
     }
 
 
+
     // -----------------------------------------------------------------
-    //  IMAGENS DE EXEMPLO (fotografias reais, uma vez e pronto)
+    //  IMAGENS DE EXEMPLO (fotografias reais, relacionadas com cada registo)
     // -----------------------------------------------------------------
-    // Percorre eventos, materiais, categorias e salas SEM imagem e vai
-    // buscar uma fotografia real à internet (serviço gratuito LoremFlickr,
-    // que devolve fotos do Flickr por tema), comprime-a e guarda-a na base
-    // de dados. Correr uma vez em: /admin/seedImagens
-    // Depois, para pôr fotos verdadeiras, basta editar o registo no painel.
+    // Percorre eventos, materiais, categorias e salas SEM imagem e vai buscar
+    // uma fotografia real à internet QUE TENHA A VER com o nome do registo:
+    // um material "Arduino Uno" recebe uma foto de Arduino, uma sala
+    // "Laboratório" recebe um laboratório, e assim por diante.
+    // Correr uma vez (como admin) em: /admin/seedImagens
+    // Para trocar por fotos verdadeiras depois, basta editar o registo.
     public function seedImagens()
     {
         $this->requireAdmin();
-        @set_time_limit(120); // podem ser bastantes downloads
+        @set_time_limit(180); // podem ser bastantes downloads
 
         $db = (new Material())->getDb();
 
-        // O que preencher: tabela, coluna da imagem, coluna do nome,
-        // tema das fotos e tamanho a pedir.
-        $alvos = [
-            ['evento',    'imagem_url', 'titulo',     'robotics',   800, 450],
-            ['material',  'imagem',     'designacao', 'electronics', 640, 480],
-            ['categoria', 'imagem',     'categoria',  'technology', 480, 480],
-            ['sala',      'imagem',     'numero',     'classroom',  800, 450],
+        // Dicionário: se o nome do registo contém a palavra da esquerda,
+        // procuro fotos com o termo (em inglês) da direita.
+        $dicionario = [
+            'arduino'     => 'arduino',
+            'esp32'       => 'microcontroller',
+            'esp8266'     => 'microcontroller',
+            'raspberry'   => 'raspberrypi',
+            'micro:bit'   => 'microcontroller',
+            'sensor'      => 'sensor',
+            'motor'       => 'electricmotor',
+            'servo'       => 'servomotor',
+            'led'         => 'led',
+            'bateria'     => 'battery',
+            'pilha'       => 'battery',
+            'cabo'        => 'cables',
+            'fio'         => 'wires',
+            'camara'      => 'camera',
+            'câmara'      => 'camera',
+            'camera'      => 'camera',
+            'impressora'  => '3dprinter',
+            '3d'          => '3dprinter',
+            'lego'        => 'lego',
+            'drone'       => 'drone',
+            'robo'        => 'robot',
+            'robô'        => 'robot',
+            'robot'       => 'robot',
+            'kit'         => 'electronickit',
+            'breadboard'  => 'breadboard',
+            'protoboard'  => 'breadboard',
+            'resist'      => 'resistor',
+            'ferramenta'  => 'tools',
+            'chave'       => 'tools',
+            'solda'       => 'soldering',
+            'ecra'        => 'display',
+            'ecrã'        => 'display',
+            'monitor'     => 'monitor',
+            'portatil'    => 'laptop',
+            'portátil'    => 'laptop',
+            'computador'  => 'computer',
+            'rato'        => 'computermouse',
+            'teclado'     => 'keyboard',
+            // eventos
+            'competi'     => 'robotcompetition',
+            'torneio'     => 'robotcompetition',
+            'feira'       => 'scienceexhibition',
+            'workshop'    => 'workshop',
+            'formacao'    => 'classroomtraining',
+            'formação'    => 'classroomtraining',
+            'apresenta'   => 'presentation',
+            'visita'      => 'fieldtrip',
+            // salas
+            'laborat'     => 'laboratory',
+            'auditor'     => 'auditorium',
+            'armaz'       => 'storageroom',
+            'oficina'     => 'workshop',
+            'biblioteca'  => 'library',
         ];
 
-        // Descarrega uma foto por HTTPS e devolve os bytes (ou null se falhar).
-        $descarregar = function (string $tema, int $larg, int $alt, int $semente): ?string {
-            // O ?random= faz com que cada registo receba uma foto diferente.
-            $url = "https://loremflickr.com/{$larg}/{$alt}/{$tema}?random={$semente}";
+        // Descobre o melhor termo de pesquisa para um registo.
+        $termoPara = function (string $nome, string $temaPorDefeito) use ($dicionario): string {
+            $n = mb_strtolower($nome);
+            foreach ($dicionario as $palavra => $termo) {
+                if (mb_strpos($n, $palavra) !== false) {
+                    return $termo;
+                }
+            }
+            // Sem correspondência no dicionário: tento a 1.ª palavra "útil" do
+            // nome (sem acentos); se não der, uso o tema por defeito da tabela.
+            $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nome) ?: '';
+            if (preg_match('/[a-zA-Z]{4,}/', $ascii, $m)) {
+                return strtolower($m[0]) . ',' . $temaPorDefeito;
+            }
+            return $temaPorDefeito;
+        };
+
+        // Descarrega uma foto (LoremFlickr devolve fotos reais do Flickr por tema).
+        $descarregar = function (string $termo, int $larg, int $alt, int $semente): ?string {
+            $url = "https://loremflickr.com/{$larg}/{$alt}/" . rawurlencode($termo) . "?random={$semente}";
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true, // o serviço redireciona para a foto
+                CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_TIMEOUT        => 15,
                 CURLOPT_USERAGENT      => 'RoboticaXL-Seeder',
             ]);
@@ -2052,18 +2119,30 @@ public function apiHorariosOcupados() {
             if ($dados === false || $codigo !== 200 || strlen($dados) < 1000) {
                 return null;
             }
-            // Confirmo que é mesmo uma imagem antes de guardar.
-            return @imagecreatefromstring($dados) ? $dados : null;
+            return @imagecreatefromstring($dados) ? $dados : null; // confirmo que é imagem
         };
+
+        // Tabela, coluna da imagem, coluna do nome, tema por defeito, tamanho.
+        $alvos = [
+            ['evento',    'imagem_url', 'titulo',     'robotics',    800, 450],
+            ['material',  'imagem',     'designacao', 'electronics', 640, 480],
+            ['categoria', 'imagem',     'categoria',  'technology',  480, 480],
+            ['sala',      'imagem',     'descricao',  'classroom',   800, 450],
+        ];
 
         $resumo = [];
         foreach ($alvos as [$tabela, $colImg, $colNome, $tema, $larg, $alt]) {
             $feitos = 0;
-            $rows = $db->query("SELECT id, `$colNome` AS nome FROM `$tabela` WHERE `$colImg` IS NULL OR LENGTH(`$colImg`) = 0")->fetchAll(PDO::FETCH_ASSOC);
+            $rows = $db->query("SELECT id, COALESCE(`$colNome`, '') AS nome FROM `$tabela` WHERE `$colImg` IS NULL OR LENGTH(`$colImg`) = 0")->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
-                $foto = $descarregar($tema, $larg, $alt, (int)$r['id'] + crc32($tabela));
+                $termo = $termoPara((string)$r['nome'], $tema);
+                $foto  = $descarregar($termo, $larg, $alt, (int)$r['id'] + crc32($tabela));
                 if ($foto === null) {
-                    continue; // sem internet/foto: fica para a próxima tentativa
+                    // 2.ª tentativa só com o tema por defeito (termo raro sem fotos).
+                    $foto = $descarregar($tema, $larg, $alt, (int)$r['id'] + crc32($tabela) + 7);
+                }
+                if ($foto === null) {
+                    continue;
                 }
                 $stmt = $db->prepare("UPDATE `$tabela` SET `$colImg` = ? WHERE id = ?");
                 $stmt->bindValue(1, $foto, PDO::PARAM_LOB);
