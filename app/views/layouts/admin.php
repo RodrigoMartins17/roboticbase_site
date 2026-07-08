@@ -99,14 +99,33 @@ $sec = $admin_section ?? '';
         }
         .main-container { padding: 2.5rem; flex-grow: 1; max-width: 1400px; margin: 0 auto; width: 100%;}
         
+        /* Botão hambúrguer: só aparece em ecrãs pequenos, fixo no canto,
+           e serve para abrir/fechar o menu lateral da administração. */
+        #rbBurger {
+            display: none; position: fixed; top: 14px; left: 14px; z-index: 1100;
+            width: 44px; height: 44px; border: none; border-radius: 12px;
+            background: #0f172a; color: #fff; font-size: 1.1rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer;
+        }
+        /* Fundo escurecido atrás do menu aberto (tocar nele fecha o menu). */
+        #rbBackdrop {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 999;
+        }
+        #rbBackdrop.show { display: block; }
+
         @media (max-width: 768px) {
             #sidebar { margin-left: -280px; position: fixed; height: 100%; }
             #sidebar.active { margin-left: 0; }
-            .main-container { padding: 1.5rem; }
+            .main-container { padding: 4.5rem 1rem 1.5rem; } /* espaço para o botão */
+            #rbBurger { display: inline-flex; align-items: center; justify-content: center; }
         }
     </style>
 </head>
 <body>
+
+<!-- Botão (hambúrguer) que abre o menu da administração em telemóveis -->
+<button id="rbBurger" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
+<div id="rbBackdrop"></div>
 
 <div class="wrapper">
     <nav id="sidebar">
@@ -179,5 +198,24 @@ $sec = $admin_section ?? '';
     });
 </script>
 <script src="<?php echo BASE_URL; ?>js/rb-loading.js"></script>
+<script>
+// Menu da administração em telemóvel: o hambúrguer abre/fecha a sidebar,
+// e tocar no fundo escuro (ou num link do menu) volta a fechá-la.
+(function () {
+    var burger = document.getElementById('rbBurger');
+    var sidebar = document.getElementById('sidebar');
+    var backdrop = document.getElementById('rbBackdrop');
+    if (!burger || !sidebar) return;
+    function alternar(abrir) {
+        sidebar.classList.toggle('active', abrir);
+        backdrop.classList.toggle('show', abrir);
+    }
+    burger.addEventListener('click', function () { alternar(!sidebar.classList.contains('active')); });
+    backdrop.addEventListener('click', function () { alternar(false); });
+    sidebar.addEventListener('click', function (e) {
+        if (e.target.closest('a')) { alternar(false); }
+    });
+})();
+</script>
 </body>
 </html>

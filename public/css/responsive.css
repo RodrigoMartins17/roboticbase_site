@@ -1,0 +1,50 @@
+/* ===========================================================
+   AFINAÇÕES PARA TELEMÓVEL (responsive.css)
+   Regras globais que tornam o site confortável em ecrãs pequenos.
+   Carregado DEPOIS do style.css, por isso só afina o que precisa.
+   =========================================================== */
+
+/* Imagens, vídeos e mapas nunca podem ser mais largos que o ecrã. */
+img, video, iframe { max-width: 100%; }
+
+/* Nos telemóveis iOS, inputs com letra <16px fazem zoom automático
+   quando se toca neles — isto evita esse salto chato. */
+@media (max-width: 576px) {
+    input[type="text"], input[type="email"], input[type="password"],
+    input[type="date"], input[type="datetime-local"], input[type="number"],
+    select, textarea { font-size: 16px !important; }
+}
+
+/* Tablets e telemóveis grandes */
+@media (max-width: 768px) {
+    /* Títulos das secções um pouco mais pequenos para não partirem mal. */
+    section h2 { font-size: 1.8rem !important; }
+
+    /* As tabelas ganham scroll horizontal em vez de esmagarem as colunas.
+       (a maioria já está dentro de .table-responsive; isto cobre o resto) */
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+    .table-clean th, .table-clean td { padding: 10px !important; font-size: 0.85rem; }
+
+    /* Barra de filtros: cada campo ocupa a linha toda, empilhados. */
+    .rb-filtros { padding: 12px; }
+    .rb-filtros input[type="text"], .rb-filtros select,
+    .rb-filtros .rb-filtros-btn { flex: 1 1 100% !important; min-width: 0 !important; }
+}
+
+/* Telemóveis */
+@media (max-width: 576px) {
+    section h2 { font-size: 1.5rem !important; }
+
+    /* Menos "ar" à volta do conteúdo — o espaço é precioso. */
+    .container { padding-left: 14px !important; padding-right: 14px !important; }
+
+    /* Botões grandes de ação empilham em vez de sair do ecrã. */
+    .d-flex.justify-content-between.flex-wrap { gap: 10px; }
+
+    /* Paginação mais compacta. */
+    .rb-pag a, .rb-pag span.rb-pag-atual { min-width: 32px; height: 32px; font-size: 0.85rem; }
+    .rb-pag .rb-pag-info { flex-basis: 100%; margin-left: 0; }
+
+    /* O mapa da localização não precisa de ser tão alto num ecrã pequeno. */
+    .map-container { height: 260px !important; }
+}

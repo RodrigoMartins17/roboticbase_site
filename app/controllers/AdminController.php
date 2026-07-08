@@ -451,9 +451,20 @@ class AdminController extends Controller
             return;
         }
         $material = $model->findModelo((int)$exemplar['id_material']);
+
+        // Vou buscar a sala onde este exemplar está armazenado (se tiver uma),
+        // para a ficha mostrar a localização em vez de "Nenhuma sala associada".
+        $stmt = $model->getDb()->prepare(
+            "SELECT s.* FROM exemplar_sala es JOIN sala s ON es.id_sala = s.id WHERE es.id_exemplar = ?"
+        );
+        $stmt->execute([(int)$exemplar['id']]);
+        $sala = $stmt->fetch(PDO::FETCH_ASSOC);
+        $exemplar['nome_sala'] = $sala ? ($sala['bloco'] . $sala['andar'] . '.' . $sala['numero']) : null;
+
         $this->viewAdmin('administracao/exemplares/view', [
             'exemplar' => $exemplar,
             'material' => $material,
+            'sala'     => $sala ?: null,
         ], 'Exemplar', 'exemplares');
     }
 
@@ -965,6 +976,10 @@ class AdminController extends Controller
             'turma'          => !empty($_POST['turma']) ? $_POST['turma'] : null,
             'data_nascimento' => !empty($_POST['data_nascimento']) ? $_POST['data_nascimento'] : date('Y-m-d'),
             'foto'           => $fotoBlob,
+            // Contas criadas pelo admin nascem já verificadas (não faz sentido
+            // pedir ao próprio admin para ir confirmar o email da pessoa).
+            'email_verificado'        => 1,
+            'email_verificacao_token' => null,
         ];
         try {
             $model = new Utilizador();
@@ -1948,5 +1963,112 @@ public function apiHorariosOcupados() {
             'totalAcessos'  => $logModel->contarAcessos(),
         ], 'Logs de Erros', 'logs_erros');
     }
-}
 
+    // -----------------------------------------------------------------
+    //  GERADOR DE IMAGENS DE EXEMPLO (usar uma vez e pronto)
+    // -----------------------------------------------------------------
+    // Percorre os eventos e materiais SEM imagem e desenha para cada um
+    // uma imagem simples com a extensão GD do PHP (gradiente com as cores
+    // do clube + o nome). Serve para o site não ficar com espaços vazios
+    // enquanto não há fotografias reais — depois basta editar o registo
+    // e carregar a fotografia verdadeira, que substitui esta.
+    // Como mexe na base de dados, só o admin pode correr isto, em:
+    //   /admin/gerarImagensExemplo
+    public function gerarImagensExemplo()
+    {
+        $this->requireAdmin();
+        if (!function_exists('imagecreatetruecolor')) {
+            echo 'A extensão GD do PHP não está disponível.';
+            return;
+        }
+
+        $db = (new Material())->getDb();
+
+        // Paletas (fundo escuro -> cor de destaque), varia consoante o id.
+        $paletas = [
+            [[13, 17, 23],  [26, 115, 232]],  // azul
+            [[15, 23, 42],  [139, 92, 246]],  // roxo
+            [[7, 59, 76],   [14, 165, 233]],  // ciano
+            [[45, 20, 45],  [236, 72, 153]],  // rosa
+            [[16, 38, 28],  [22, 163, 74]],   // verde
+            [[55, 35, 12],  [245, 158, 11]],  // laranja
+        ];
+
+        // Função que desenha UMA imagem e devolve o JPEG (em texto binário).
+        $desenhar = function (int $larg, int $alt, string $titulo, string $rodape, array $pal): string {
+            [$fundo, $cor] = $pal;
+            $img = imagecreatetruecolor($larg, $alt);
+
+            // 1) Fundo em gradiente vertical (do escuro para o destaque).
+            for ($y = 0; $y < $alt; $y++) {
+                $t = $y / max(1, $alt - 1) * 0.55; // só 55% do caminho, fica suave
+                $c = imagecolorallocate($img,
+                    (int)($fundo[0] + ($cor[0] - $fundo[0]) * $t),
+                    (int)($fundo[1] + ($cor[1] - $fundo[1]) * $t),
+                    (int)($fundo[2] + ($cor[2] - $fundo[2]) * $t));
+                imageline($img, 0, $y, $larg, $y, $c);
+            }
+
+            // 2) Círculos decorativos translúcidos no canto.
+            $claro = imagecolorallocatealpha($img, $cor[0], $cor[1], $cor[2], 95);
+            imagefilledellipse($img, (int)($larg * 0.85), (int)($alt * 0.2), (int)($larg * 0.5), (int)($larg * 0.5), $claro);
+            imagefilledellipse($img, (int)($larg * 0.1), (int)($alt * 0.9), (int)($larg * 0.35), (int)($larg * 0.35), $claro);
+
+            // 3) O nome, em letras grandes. O GD só tem fontes pequenas
+            //    embutidas, por isso escrevo pequeno e amplio 3x (fica um
+            //    estilo "pixelizado" propositado, tipo retro/robótica).
+            $texto = mb_strimwidth($titulo, 0, 22, '…');
+            $texto = iconv('UTF-8', 'ASCII//TRANSLIT', $texto) ?: $texto; // a fonte do GD não tem acentos
+            $lt = imagefontwidth(5) * strlen($texto);
+            $at = imagefontheight(5);
+            $mini = imagecreatetruecolor(max(1, $lt), $at);
+            imagealphablending($mini, false);
+            $transp = imagecolorallocatealpha($mini, 0, 0, 0, 127);
+            imagefill($mini, 0, 0, $transp);
+            imagestring($mini, 5, 0, 0, $texto, imagecolorallocate($mini, 255, 255, 255));
+            $esc = 3;
+            imagealphablending($img, true);
+            imagecopyresized($img, $mini,
+                (int)(($larg - $lt * $esc) / 2), (int)($alt / 2 - $at * $esc / 2),
+                0, 0, $lt * $esc, $at * $esc, $lt, $at);
+            imagedestroy($mini);
+
+            // 4) Rodapé pequeno com a "marca".
+            $lr = imagefontwidth(3) * strlen($rodape);
+            imagestring($img, 3, (int)(($larg - $lr) / 2), $alt - 30, $rodape, imagecolorallocate($img, 220, 228, 240));
+
+            ob_start();
+            imagejpeg($img, null, 85);
+            imagedestroy($img);
+            return (string)ob_get_clean();
+        };
+
+        // Percorro cada tabela e preencho só os registos SEM imagem.
+        $feitos = ['eventos' => 0, 'materiais' => 0];
+
+        $eventos = $db->query("SELECT id, titulo FROM evento WHERE imagem_url IS NULL OR LENGTH(imagem_url) = 0")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($eventos as $e) {
+            $jpeg = $desenhar(800, 450, (string)$e['titulo'], 'Evento · RoboticaXL', $paletas[(int)$e['id'] % count($paletas)]);
+            $stmt = $db->prepare("UPDATE evento SET imagem_url = ? WHERE id = ?");
+            $stmt->bindValue(1, $jpeg, PDO::PARAM_LOB);
+            $stmt->bindValue(2, (int)$e['id'], PDO::PARAM_INT);
+            $stmt->execute();
+            $feitos['eventos']++;
+        }
+
+        $materiais = $db->query("SELECT id, designacao FROM material WHERE imagem IS NULL OR LENGTH(imagem) = 0")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($materiais as $m) {
+            $jpeg = $desenhar(640, 480, (string)$m['designacao'], 'Material · RoboticaXL', $paletas[(int)$m['id'] % count($paletas)]);
+            $stmt = $db->prepare("UPDATE material SET imagem = ? WHERE id = ?");
+            $stmt->bindValue(1, $jpeg, PDO::PARAM_LOB);
+            $stmt->bindValue(2, (int)$m['id'], PDO::PARAM_INT);
+            $stmt->execute();
+            $feitos['materiais']++;
+        }
+
+        // Resumo simples do que foi feito, com link de volta.
+        $this->setFlash('success', 'Imagens de exemplo criadas: ' . $feitos['eventos'] . ' evento(s) e ' . $feitos['materiais'] . ' materia(l/is).');
+        $this->redirect('admin/index');
+    }
+
+}

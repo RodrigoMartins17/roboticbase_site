@@ -44,6 +44,8 @@ $isStaff = Auth::isAdmin() || Auth::isResponsavel();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/style.css">
+    <!-- Afinações para telemóvel (carregado depois do style para o poder afinar) -->
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/responsive.css">
 
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #050505; color: #fff; margin: 0; overflow-x: hidden; }
