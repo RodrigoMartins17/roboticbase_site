@@ -1,0 +1,11 @@
+# Segredos locais — nunca enviar para o GitHub
+app/config/config.local.php
+
+# Ficheiros do sistema
+Thumbs.db
+.DS_Store
+
+# Documentos da PAP (não fazem parte do código do site)
+Apresentacao_PAP_RoboticaXL.pptx
+*.docx
+prints_pap/
