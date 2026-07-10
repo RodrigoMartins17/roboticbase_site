@@ -201,6 +201,8 @@ class UserController extends Controller
                 }
                 $passwordHash = password_hash((string)$_POST['palavra_passe'], PASSWORD_DEFAULT);
                 $model->updatePassword((int)$id, $passwordHash);
+                // Password definida no painel => conta fica verificada.
+                $model->markEmailAsVerified((int)$id);
             }
         } catch (PDOException $e) {
             if ($this->hasUploadedFile($_FILES['foto_perfil'] ?? null) && $fotoBlob === null) {

@@ -267,6 +267,9 @@ class AuthController extends Controller
                 return;
             }
             $model->updatePassword((int)$user['id'], password_hash($password, PASSWORD_DEFAULT));
+            // Se chegou aqui, clicou num link que enviámos PARA O EMAIL dele —
+            // isso prova que o email é dele, por isso a conta fica logo verificada.
+            $model->markEmailAsVerified((int)$user['id']);
             $model->limparResetToken((int)$user['id']); // o token só serve uma vez
             (new Log())->registar((int)$user['id'], 'ALTERACAO', 'Palavra-passe alterada com sucesso (' . ($user['email'] ?? '') . ')');
             $this->viewRaw('auth/login', ['success' => 'Palavra-passe alterada com sucesso. Já podes iniciar sessão.']);

@@ -1070,6 +1070,9 @@ class AdminController extends Controller
             $model->updateById((int)$id, $data);
             if (!empty($_POST['palavra_passe'])) {
                 $model->updatePassword((int)$id, password_hash($_POST['palavra_passe'], PASSWORD_DEFAULT));
+                // Password definida pelo admin => conta fica verificada,
+                // para a pessoa poder entrar logo com a password nova.
+                $model->markEmailAsVerified((int)$id);
             }
         } catch (PDOException $e) {
             $user = $model->find((int)$id);
