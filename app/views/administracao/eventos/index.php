@@ -46,10 +46,12 @@ include __DIR__ . '/../_filtros.php';
                     <th class="text-end pe-4" style="width: 180px;">Ações</th>
                 </tr>
             </thead>
-            <tbody>
+            <!-- tbody com id para o SortableJS saber que linhas pode arrastar -->
+            <tbody id="listaEventos">
                 <?php foreach ($eventos as $e): ?>
-                <tr>
-                    <td class="ps-4"><?php echo htmlspecialchars($e['id']); ?></td>
+                <tr data-id="<?php echo (int)$e['id']; ?>">
+                    <td class="ps-4" style="cursor: grab; color: #94a3b8;" title="Arrasta para mudar a ordem">
+                        <i class="fas fa-grip-vertical me-2 alca-arrastar"></i><?php echo htmlspecialchars($e['id']); ?></td>
                     <td>
                         <div class="d-flex align-items-center gap-3">
                             <?php if (!empty($e['imagem_url'])): ?>
@@ -85,3 +87,40 @@ include __DIR__ . '/../_filtros.php';
 // Botões das páginas (partilhados — ver app/views/administracao/_paginacao.php).
 include __DIR__ . '/../_paginacao.php';
 ?>
+
+<!-- ============================================================
+     ARRASTAR PARA REORDENAR
+     Uso a biblioteca SortableJS: as linhas da tabela podem ser
+     arrastadas para cima/baixo; ao largar, envio a nova ordem ao
+     servidor (admin/eventosReordenar) que grava o campo "ordem".
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+    var tbody = document.getElementById('listaEventos');
+    if (!tbody || typeof Sortable === 'undefined') return;
+
+    // Desvio da paginação: na página 2 o 1.º evento não é o n.º 0 da lista toda.
+    var desvio = <?php echo (int)((($paginacao['pagina'] ?? 1) - 1) * ($paginacao['porPagina'] ?? 8)); ?>;
+
+    new Sortable(tbody, {
+        animation: 150,
+        handle: '.alca-arrastar',      // só se arrasta pela alça (os botões continuam a funcionar)
+        ghostClass: 'table-active',
+        onEnd: function () {
+            // Junto os ids pela ordem em que as linhas ficaram no ecrã.
+            var ids = Array.from(tbody.querySelectorAll('tr[data-id]')).map(function (tr) {
+                return parseInt(tr.getAttribute('data-id'), 10);
+            });
+            fetch('<?php echo BASE_URL; ?>admin/eventosReordenar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: ids, desvio: desvio })
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                // Recarrego para a coluna "Ordem" mostrar os números novos.
+                if (res.ok) { location.reload(); }
+            }).catch(function () { alert('Não foi possível guardar a nova ordem.'); });
+        }
+    });
+})();
+</script>

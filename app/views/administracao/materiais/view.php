@@ -14,7 +14,7 @@
             <h4 class="mb-0 fw-bold" style="color: #1e293b;">Detalhes do Material</h4>
             <div class="d-flex flex-wrap gap-2">
                 <a href="<?php echo BASE_URL; ?>admin/materialEdit/<?php echo (int)($material['id'] ?? 0); ?>" class="btn-clean-outline" style="background-color: #fffbeb; color: #d97706; border-color: #fde68a;">
-                    <i class="fas fa-pen me-2"></i>Editar Dados
+                    <i class="fas fa-pen me-2"></i>Editar
                 </a>
                 <a href="<?php echo BASE_URL; ?>admin/materialDelete/<?php echo (int)$material['id']; ?>" class="btn-clean-outline" style="background-color: #fef2f2; color: #dc2626; border-color: #fecaca;" title="Apagar">
                 <i class="fas fa-trash-alt me-2"></i>Eliminar</a>
@@ -89,7 +89,7 @@
                                         </td>
                                         <td class="text-end pe-4">
                                             <a href="<?php echo BASE_URL; ?>admin/exemplarView/<?php echo $e['id']; ?>" class="btn btn-sm" style="background-color: #f8fafc; color: #2563eb; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                                                <i class="fas fa-eye me-1"></i> Ver
+                                                Ver
                                             </a>
                                         </td>
                                     </tr>

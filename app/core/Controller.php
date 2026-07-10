@@ -284,7 +284,21 @@ class Controller
     // os botões: página atual, total de páginas e total de registos.
     protected function paginar(array $itens, int $porPagina = 12): array
     {
-        $total        = count($itens);
+        $total = count($itens);
+
+        // Com ?todos=1 no URL a paginação desliga-se e a lista mostra tudo
+        // (o paginador da view mostra o botão "Ver todos"/"Ver paginado").
+        if (!empty($_GET['todos'])) {
+            return [
+                'itens'        => $itens,
+                'pagina'       => 1,
+                'totalPaginas' => 1,
+                'total'        => $total,
+                'porPagina'    => max(1, $total),
+                'verTodos'     => true,
+            ];
+        }
+
         $totalPaginas = max(1, (int)ceil($total / $porPagina));
 
         // Leio a página do URL e prendo-a entre 1 e a última (para não dar asneira
@@ -298,6 +312,7 @@ class Controller
             'totalPaginas' => $totalPaginas,
             'total'        => $total,
             'porPagina'    => $porPagina,
+            'verTodos'     => false,
         ];
     }
 

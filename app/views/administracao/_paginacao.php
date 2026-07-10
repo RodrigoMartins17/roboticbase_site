@@ -7,6 +7,26 @@
 //   'pagina' → página atual   'totalPaginas' → nº de páginas   'total' → nº registos
 // Os links mantêm os filtros que estão no URL — mudo SÓ o parâmetro "pagina",
 // para a pessoa não perder a pesquisa quando muda de página.
+// Função que constrói URLs mantendo os filtros atuais mas trocando um parâmetro.
+$urlCom = function (array $trocas): string {
+    $params = $_GET;
+    foreach ($trocas as $k => $v) {
+        if ($v === null) { unset($params[$k]); } else { $params[$k] = $v; }
+    }
+    unset($params['url']); // parâmetro interno do Router, não vai no link
+    $q = http_build_query($params);
+    return $q === '' ? '?' : '?' . $q;
+};
+
+// Modo "ver todos" ativo: mostro o total e o botão para voltar à paginação.
+if (!empty($paginacao['verTodos'])) {
+    echo '<div style="display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:0.85rem;padding:12px 4px;">'
+        . 'A mostrar todos os ' . (int)$paginacao['total'] . ' registo(s)'
+        . '<a href="' . htmlspecialchars($urlCom(['todos' => null, 'pagina' => null])) . '" style="color:#2563eb;font-weight:600;text-decoration:none;">Ver paginado</a>'
+        . '</div>';
+    return;
+}
+
 if (empty($paginacao) || $paginacao['totalPaginas'] <= 1) {
     // Com uma página só não vale a pena desenhar botões — mostro apenas o total.
     if (!empty($paginacao) && $paginacao['total'] > 0) {
@@ -71,5 +91,8 @@ $fim    = min($ultima, $atual + 2);
 
     <span class="rb-pag-info">
         Página <?php echo $atual; ?> de <?php echo $ultima; ?> · <?php echo (int)$paginacao['total']; ?> registo(s)
+        &nbsp;·&nbsp;
+        <!-- Desliga a paginação e mostra a lista inteira -->
+        <a href="<?php echo htmlspecialchars($urlCom(['todos' => 1, 'pagina' => null])); ?>" style="color:#2563eb;font-weight:600;text-decoration:none;">Ver todos</a>
     </span>
 </nav>

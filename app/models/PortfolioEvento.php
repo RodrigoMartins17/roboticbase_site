@@ -71,6 +71,13 @@ class PortfolioEvento extends Model
         return $stmt->execute($data);
     }
 
+    // Grava só o campo "ordem" (usado pelo arrastar-e-largar da lista admin).
+    public function atualizarOrdem(int $id, int $ordem)
+    {
+        $stmt = $this->db->prepare("UPDATE evento SET ordem = ? WHERE id = ?");
+        return $stmt->execute([$ordem, $id]);
+    }
+
     public function deleteById(int $id)
     {
         $stmt = $this->db->prepare("DELETE FROM evento WHERE id = ?");

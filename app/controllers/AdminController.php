@@ -611,10 +611,12 @@ class AdminController extends Controller
         $newIdSala = !empty($_POST['id_sala']) ? (int)$_POST['id_sala'] : 0;
         try {
             $model->updateItem((int)$id, $data);
+            // BUG corrigido: ao TROCAR de sala, a associação antiga tem de sair
+            // primeiro — o INSERT IGNORE não substitui, só acrescenta, e a página
+            // continuava a mostrar a sala antiga como se não tivesse gravado.
+            $model->removerSalaExemplar((int)$id);
             if ($newIdSala > 0) {
                 $model->adicionarSalaExemplar((int)$id, $newIdSala);
-            } else {
-                $model->removerSalaExemplar((int)$id);
             }
         } catch (PDOException $e) {
             $materiais = $model->todosModelos();
@@ -1929,6 +1931,33 @@ class AdminController extends Controller
             return;
         }
         $this->redirect('admin/eventos');
+    }
+
+    // Recebe (por AJAX) a nova ordem dos eventos depois de o admin os arrastar
+    // na lista, e grava o campo "ordem" de cada um. O JavaScript envia os ids
+    // pela ordem em que ficaram + o desvio da página atual (por causa da paginação).
+    public function eventosReordenar()
+    {
+        $this->requireAdmin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['ok' => false]);
+            return;
+        }
+        $corpo = json_decode(file_get_contents('php://input'), true);
+        $ids = array_map('intval', $corpo['ids'] ?? []);
+        $desvio = max(0, (int)($corpo['desvio'] ?? 0));
+        if (empty($ids)) {
+            echo json_encode(['ok' => false]);
+            return;
+        }
+        $model = new PortfolioEvento();
+        foreach ($ids as $posicao => $idEvento) {
+            $model->atualizarOrdem($idEvento, $desvio + $posicao);
+        }
+        $this->registarAcao('ALTERACAO', 'Eventos reordenados por arrastar (' . count($ids) . ' eventos)');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
     }
 
     public function eventoView($id)
