@@ -101,7 +101,7 @@ foreach ($consultas as [$tipoReq, $tipoAviso, $sql]) {
         if (empty($r['email'])) { continue; }
         $ok = false;
         try {
-            $ok = Mailer::sendWarning12h($r['email'], $r['nome'], $tipoReq, (int)$r['id'], $tipoAviso, $r['quando'], $r['item']);
+            $ok = Mailer::sendAviso24h($r['email'], $r['nome'], $tipoReq, (int)$r['id'], $tipoAviso, $r['quando'], $r['item']);
         } catch (\Throwable $e) { $ok = false; }
 
         if ($ok) {

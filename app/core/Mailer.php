@@ -350,7 +350,7 @@ class Mailer
         return self::send($to, 'Requisição #' . $id . ' atualizada — ' . $estado, self::layout($corpo));
     }
 
-    public static function sendWarning12h(string $to, string $name, string $tipo, int $id, string $acao, string $data, string $item): bool
+    public static function sendAviso24h(string $to, string $name, string $tipo, int $id, string $acao, string $data, string $item): bool
     {
         $ehSala = (stripos($tipo, 'sala') !== false);
         $buscar = ($acao === 'LEVANTAMENTO');
