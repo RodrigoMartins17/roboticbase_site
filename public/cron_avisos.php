@@ -13,6 +13,7 @@
 // ============================================================================
 
 require_once __DIR__ . '/../app/config/config.php';
+require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/core/Mailer.php';
 
 // Chave simples para o browser não deixar qualquer pessoa disparar emails.
@@ -27,17 +28,10 @@ if (!$viaCLI && (($_GET['key'] ?? '') !== $CHAVE)) {
 header('Content-Type: text/plain; charset=utf-8');
 
 try {
-    $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-        DB_USER, DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-    // Mesmo acerto de fuso horário que a ligação principal (a BD online está em UTC).
-    try {
-        $desvio = (new DateTime('now', new DateTimeZone('Europe/Lisbon')))->format('P');
-        $pdo->exec("SET time_zone = '" . $desvio . "'");
-    } catch (Throwable $e) {
-    }
+    // Uso a ligação CENTRAL do site (classe Database): é ela que sabe a porta,
+    // o SSL do alojamento online e o acerto do fuso horário. A ligação "à mão"
+    // que aqui estava não tinha porta nem SSL e dava timeout no Aiven.
+    $pdo = Database::getInstance();
 } catch (Exception $e) {
     exit('Erro de ligação à BD: ' . $e->getMessage());
 }
