@@ -5,6 +5,23 @@ class PortfolioEvento extends Model
 {
 
   // Usado no Painel de Administração (Mostra TODOS, ativos e inativos)
+    public function __construct()
+    {
+        parent::__construct();
+        // Garante que a coluna "fixado" existe (igual ao que o Utilizador faz
+        // com as colunas de verificação de email): se a base de dados ainda
+        // não tiver a coluna, crio-a aqui — assim o site nunca rebenta por
+        // faltar correr um ALTER à mão.
+        try {
+            $this->db->query("SELECT fixado FROM evento LIMIT 1");
+        } catch (\Throwable $e) {
+            try {
+                $this->db->exec("ALTER TABLE evento ADD COLUMN fixado TINYINT(1) NOT NULL DEFAULT 0 AFTER ativo");
+            } catch (\Throwable $x) {
+            }
+        }
+    }
+
     public function todos()
     {
         $stmt = $this->db->prepare("SELECT * FROM evento ORDER BY fixado DESC, ordem ASC, created_at DESC");
