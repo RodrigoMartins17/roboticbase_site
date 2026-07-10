@@ -32,6 +32,12 @@ try {
         DB_USER, DB_PASS,
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
+    // Mesmo acerto de fuso horário que a ligação principal (a BD online está em UTC).
+    try {
+        $desvio = (new DateTime('now', new DateTimeZone('Europe/Lisbon')))->format('P');
+        $pdo->exec("SET time_zone = '" . $desvio . "'");
+    } catch (Throwable $e) {
+    }
 } catch (Exception $e) {
     exit('Erro de ligação à BD: ' . $e->getMessage());
 }

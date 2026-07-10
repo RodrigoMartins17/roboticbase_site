@@ -28,6 +28,17 @@ class Database
             try {
                 // Crio a ligação com o PDO (a forma segura de falar com a BD em PHP).
                 self::$instance = new PDO($dsn, DB_USER, DB_PASS, $opcoes);
+
+                // Alinho o relógio do MySQL com o de Portugal. A base de dados online
+                // trabalha em UTC, por isso o NOW() dela ficava 1 hora atrasado no verão.
+                // Calculo o desvio atual de Lisboa no PHP (+01:00 no verão, +00:00 no
+                // inverno — o PHP trata da mudança da hora sozinho) e aplico-o à sessão.
+                try {
+                    $desvio = (new \DateTime('now', new \DateTimeZone('Europe/Lisbon')))->format('P');
+                    self::$instance->exec("SET time_zone = '" . $desvio . "'");
+                } catch (\Throwable $e) {
+                    // Se falhar, o site continua a funcionar (só as horas da BD ficam em UTC).
+                }
             } catch (PDOException $e) {
                 // Se não conseguir ligar (ex: MySQL desligado), paro e mostro o erro.
                 die('Erro de ligação à BD: ' . $e->getMessage());
