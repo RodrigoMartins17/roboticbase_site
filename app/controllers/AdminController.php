@@ -91,11 +91,39 @@ class AdminController extends Controller
         $reqSalaTotal    = $reqSala->total();
         $totalRequisicoes = $reqMatTotal + $reqSalaTotal;
 
-        // Dados para os gráficos e tabelas
-        $porAceitarMat  = $reqMat->pendentes();
-        $porAceitarSala = $reqSala->pendentes();
-        $aEntregarMat   = $reqMat->aceites();
-        $aEntregarSala  = $reqSala->aceites();
+        // ------------------------------------------------------------------
+        //  DADOS PARA OS GRÁFICOS (semanal e mensal)
+        // ------------------------------------------------------------------
+        // Conto quantas requisições foram CRIADAS por dia (últimos 7 dias) e
+        // por mês (últimos 6 meses), separando materiais de salas. A view
+        // desenha estes números com o Chart.js.
+        $db = $reqMat->getDb();
+
+        // Contagens agrupadas por dia (a chave é a data, o valor é o total).
+        $matPorDia  = $db->query("SELECT DATE(data_pedido), COUNT(*) FROM requisicao_exemplar WHERE data_pedido >= CURDATE() - INTERVAL 6 DAY GROUP BY DATE(data_pedido)")->fetchAll(PDO::FETCH_KEY_PAIR);
+        $salaPorDia = $db->query("SELECT DATE(data), COUNT(*) FROM requisicao_sala WHERE data >= CURDATE() - INTERVAL 6 DAY GROUP BY DATE(data)")->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $diasPt = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        $graficoSemanal = ['labels' => [], 'materiais' => [], 'salas' => []];
+        for ($i = 6; $i >= 0; $i--) {
+            $dia = date('Y-m-d', strtotime("-$i days"));
+            $graficoSemanal['labels'][]    = $diasPt[(int)date('w', strtotime($dia))] . ' ' . date('d/m', strtotime($dia));
+            $graficoSemanal['materiais'][] = (int)($matPorDia[$dia] ?? 0);
+            $graficoSemanal['salas'][]     = (int)($salaPorDia[$dia] ?? 0);
+        }
+
+        // Contagens agrupadas por mês (últimos 6 meses, incluindo o atual).
+        $matPorMes  = $db->query("SELECT DATE_FORMAT(data_pedido, '%Y-%m'), COUNT(*) FROM requisicao_exemplar WHERE data_pedido >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01') GROUP BY DATE_FORMAT(data_pedido, '%Y-%m')")->fetchAll(PDO::FETCH_KEY_PAIR);
+        $salaPorMes = $db->query("SELECT DATE_FORMAT(data, '%Y-%m'), COUNT(*) FROM requisicao_sala WHERE data >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01') GROUP BY DATE_FORMAT(data, '%Y-%m')")->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $mesesPt = [1=>'Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        $graficoMensal = ['labels' => [], 'materiais' => [], 'salas' => []];
+        for ($i = 5; $i >= 0; $i--) {
+            $mes = date('Y-m', strtotime("first day of -$i months"));
+            $graficoMensal['labels'][]    = $mesesPt[(int)date('n', strtotime($mes . '-01'))] . ' ' . date('y', strtotime($mes . '-01'));
+            $graficoMensal['materiais'][] = (int)($matPorMes[$mes] ?? 0);
+            $graficoMensal['salas'][]     = (int)($salaPorMes[$mes] ?? 0);
+        }
 
         
         // Enviar tudo para a View
@@ -106,10 +134,8 @@ class AdminController extends Controller
             'totalSalas'         => $totalSalas,
             'totalUtilizadores'  => $totalUtilizadores,
             'totalRequisicoes'   => $totalRequisicoes,
-            'porAceitarMat'      => $porAceitarMat,
-            'porAceitarSala'     => $porAceitarSala,
-            'aEntregarMat'       => $aEntregarMat,
-            'aEntregarSala'      => $aEntregarSala,
+            'graficoSemanal'     => $graficoSemanal,
+            'graficoMensal'      => $graficoMensal,
             'eventosBrutos'      => $eventosBrutos,
             'inicioSemanaCal'    => $inicioSemana,
             'offsetSemana'       => $offsetSemana,

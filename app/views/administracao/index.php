@@ -266,108 +266,72 @@ $horaFim = 19;
     </div>
 </div>
 
+<!-- ===================================================================
+     GRÁFICOS DE REQUISIÇÕES
+     Substituem as antigas listas "Pedidos por Aceitar"/"Entregas" (essas
+     geriam-se melhor nas páginas próprias). Aqui interessa a visão geral:
+     quantas requisições entram por dia e por mês, materiais vs salas.
+     Os números vêm prontos do AdminController::index().
+     =================================================================== -->
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0"><i class="fas fa-clock text-warning me-2"></i> Pedidos Por Aceitar</h6>
-                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><?= count($porAceitarMat ?? []) + count($porAceitarSala ?? []) ?> pendentes</span>
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="fw-bold mb-0"><i class="fas fa-chart-column text-primary me-2"></i> Requisições — últimos 7 dias</h6>
             </div>
-            <div class="table-responsive">
-                <table class="table table-borderless table-clean mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-3">Tipo</th>
-                            <th>Utilizador</th>
-                            <th>Detalhe e Data</th>
-                            <th class="text-end pe-3">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (array_slice($porAceitarMat ?? [], 0, 5) as $r): ?>
-                            <tr>
-                                <td class="ps-3"><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">Material</span></td>
-                                <td class="fw-bold"><?= htmlspecialchars($r['utilizador_nome'] ?? '') ?></td>
-                                <td class="text-muted small">
-                                    <span class="d-block fw-bold text-dark mb-1"><?= htmlspecialchars($r['material_designacao'] ?? '') ?></span>
-                                    <div><i class="far fa-calendar-check me-1"></i><?= date('d/m H:i', strtotime($r['data_levantamento'] ?? $r['data_pedido'])) ?></div>
-                                    <div style="font-size: 0.7rem; margin-top: 2px;"><i class="fas fa-undo me-1"></i><?= date('d/m H:i', strtotime($r['data_devolucao'] ?? '')) ?></div>
-                                </td>
-                                <td class="text-end pe-3"><a href="<?= BASE_URL ?>admin/requisicoesMateriais" class="btn btn-sm btn-outline-primary">Gerir</a></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php foreach (array_slice($porAceitarSala ?? [], 0, 5) as $r): ?>
-                            <tr>
-                                <td class="ps-3"><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Sala</span></td>
-                                <td class="fw-bold"><?= htmlspecialchars($r['utilizador_nome'] ?? '') ?></td>
-                                <td class="text-muted small">
-                                    <span class="d-block fw-bold text-dark mb-1"><?= htmlspecialchars(($r['bloco'] ?? '') . ($r['andar'] ?? '') . '-' . ($r['sala_numero'] ?? '')) ?></span>
-                                    <div><i class="far fa-calendar-check me-1"></i><?= date('d/m H:i', strtotime($r['data_inicio'] ?? $r['data'])) ?></div>
-                                    <div style="font-size: 0.7rem; margin-top: 2px;"><i class="fas fa-undo me-1"></i><?= date('d/m H:i', strtotime($r['data_fim'] ?? '')) ?></div>
-                                </td>
-                                <td class="text-end pe-3"><a href="<?= BASE_URL ?>admin/requisicoesSalas" class="btn btn-sm btn-outline-success">Gerir</a></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php if (empty($porAceitarMat) && empty($porAceitarSala)): ?>
-                            <tr><td colspan="4" class="text-muted text-center py-5"><i class="fas fa-check-circle text-success mb-2 fs-3 d-block"></i>Tudo em dia!</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            <div class="card-body">
+                <canvas id="graficoSemanal" height="230"></canvas>
             </div>
         </div>
     </div>
-    
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0"><i class="fas fa-truck text-info me-2"></i> Lista de Entregas Pendentes</h6>
-                <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><?= count($aEntregarMat ?? []) + count($aEntregarSala ?? []) ?> para entrega</span>
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="fw-bold mb-0"><i class="fas fa-chart-line text-success me-2"></i> Requisições — últimos 6 meses</h6>
             </div>
-            <div class="table-responsive">
-                <table class="table table-borderless table-clean mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-3">Tipo</th>
-                            <th>Utilizador</th>
-                            <th>Detalhe e Data</th>
-                            <th class="text-end pe-3">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (array_slice($aEntregarMat ?? [], 0, 5) as $r): ?>
-                            <tr>
-                                <td class="ps-3"><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">Material</span></td>
-                                <td class="fw-bold"><?= htmlspecialchars($r['utilizador_nome'] ?? '') ?></td>
-                                <td class="text-muted small">
-                                    <span class="d-block fw-bold text-dark mb-1"><?= htmlspecialchars($r['material_designacao'] ?? '') ?></span>
-                                    <div><i class="far fa-calendar-check me-1"></i><?= date('d/m H:i', strtotime($r['data_levantamento'] ?? $r['data_pedido'])) ?></div>
-                                    <div style="font-size: 0.7rem; margin-top: 2px;"><i class="fas fa-undo me-1"></i><?= date('d/m H:i', strtotime($r['data_devolucao'] ?? '')) ?></div>
-                                </td>
-                                <td class="text-end pe-3"><a href="<?= BASE_URL ?>admin/requisicoesMateriais" class="btn btn-sm btn-outline-primary">Gerir</a></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php foreach (array_slice($aEntregarSala ?? [], 0, 5) as $r): ?>
-                            <tr>
-                                <td class="ps-3"><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Sala</span></td>
-                                <td class="fw-bold"><?= htmlspecialchars($r['utilizador_nome'] ?? '') ?></td>
-                                <td class="text-muted small">
-                                    <span class="d-block fw-bold text-dark mb-1"><?= htmlspecialchars(($r['bloco'] ?? '') . ($r['andar'] ?? '') . '-' . ($r['sala_numero'] ?? '')) ?></span>
-                                    <div><i class="far fa-calendar-check me-1"></i><?= date('d/m H:i', strtotime($r['data_inicio'] ?? $r['data'])) ?></div>
-                                    <div style="font-size: 0.7rem; margin-top: 2px;"><i class="fas fa-undo me-1"></i><?= date('d/m H:i', strtotime($r['data_fim'] ?? '')) ?></div>
-                                </td>
-                                <td class="text-end pe-3"><a href="<?= BASE_URL ?>admin/requisicoesSalas" class="btn btn-sm btn-outline-success">Gerir</a></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php if (empty($aEntregarMat) && empty($aEntregarSala)): ?>
-                            <tr><td colspan="4" class="text-muted text-center py-5"><i class="fas fa-box-open text-muted mb-2 fs-3 d-block"></i>Nenhuma entrega pendente.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            <div class="card-body">
+                <canvas id="graficoMensal" height="230"></canvas>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Os dados chegam do PHP já contados (dias/meses, materiais e salas).
+const gSemanal = <?= json_encode($graficoSemanal ?? ['labels'=>[], 'materiais'=>[], 'salas'=>[]]) ?>;
+const gMensal  = <?= json_encode($graficoMensal ?? ['labels'=>[], 'materiais'=>[], 'salas'=>[]]) ?>;
+
+// Opções comuns aos dois gráficos (eixo Y só com números inteiros).
+const opcoes = {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+};
+
+// Barras lado a lado: azul = materiais, verde = salas.
+new Chart(document.getElementById('graficoSemanal'), {
+    type: 'bar',
+    data: {
+        labels: gSemanal.labels,
+        datasets: [
+            { label: 'Materiais', data: gSemanal.materiais, backgroundColor: '#2563eb', borderRadius: 6 },
+            { label: 'Salas',     data: gSemanal.salas,     backgroundColor: '#16a34a', borderRadius: 6 }
+        ]
+    },
+    options: opcoes
+});
+
+// Evolução mensal em linhas, para se ver a tendência ao longo do tempo.
+new Chart(document.getElementById('graficoMensal'), {
+    type: 'line',
+    data: {
+        labels: gMensal.labels,
+        datasets: [
+            { label: 'Materiais', data: gMensal.materiais, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.15)', fill: true, tension: .35 },
+            { label: 'Salas',     data: gMensal.salas,     borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.15)', fill: true, tension: .35 }
+        ]
+    },
+    options: opcoes
+});
+</script>
