@@ -72,6 +72,14 @@ class RequisicaoSalaController extends Controller
                 $this->redirect('requisicaoSala/criar');
             }
 
+            // A sala tem de estar DISPONÍVEL (não pode estar indisponível/manutenção).
+            require_once __DIR__ . '/../models/Sala.php';
+            $salaEscolhida = (new Sala())->find($salaId);
+            if (!$salaEscolhida || ($salaEscolhida['estado'] ?? '') !== 'DISPONIVEL') {
+                $this->setFlash('error', 'Esta sala não está disponível para requisição.');
+                $this->redirect('requisicaoSala/criar');
+            }
+
             // Verifico se a sala já está reservada nessas horas (para não haver choques).
             if ($reqModel->verificarConflito($salaId, $dataInicioSql, $dataFimSql)) {
                 $this->setFlash('error', 'A sala ja esta reservada neste periodo.');
@@ -94,7 +102,8 @@ class RequisicaoSalaController extends Controller
         }
 
         // Se não foi POST, mostro o formulário com a lista de salas.
-        $salas = $salaModel->todas();
+        // Só mostro salas DISPONÍVEIS — as indisponíveis não podem ser requisitadas.
+        $salas = $salaModel->disponiveis();
         $salaSelecionada = (int) ($_GET['sala_id'] ?? 0);
         $this->view('requisicoes_sala/form', [
             'salas' => $salas,

@@ -1405,6 +1405,15 @@ class AdminController extends Controller
 
         try {
             $reqMat->update((int)$id, $data);
+            // O clube alterou a requisição (datas/estado): aviso o utilizador por
+            // email com os novos dados e deixo registo na auditoria.
+            if (!empty($req['utilizador_email'])) {
+                try {
+                    Mailer::sendRequisicaoEditada($req['utilizador_email'], $req['utilizador_nome'] ?? 'Utilizador',
+                        'material', (int)$id, $data['data_levantamento'], $data['data_devolucao']);
+                } catch (\Throwable $e) {}
+            }
+            $this->registarAcao('ALTERACAO', 'Requisição de material #' . (int)$id . ' editada pelo painel');
             $this->redirect('admin/reqMaterialView/' . $id);
         } catch (PDOException $e) {
             $materialModel = new Material();
@@ -1716,6 +1725,14 @@ class AdminController extends Controller
                 'estado_entrega' => (int)($_POST['estado_entrega'] ?? ($req['estado_entrega'] ?? 0)),
                 'observacao' => !empty($_POST['observacao']) ? trim($_POST['observacao']) : null,
             ]);
+            // Aviso o utilizador de que o clube alterou a reserva (novas horas).
+            if (!empty($req['utilizador_email'])) {
+                try {
+                    Mailer::sendRequisicaoEditada($req['utilizador_email'], $req['utilizador_nome'] ?? 'Utilizador',
+                        'sala', (int)$id, $dataInicio, $dataFim);
+                } catch (\Throwable $e) {}
+            }
+            $this->registarAcao('ALTERACAO', 'Requisição de sala #' . (int)$id . ' editada pelo painel');
             $this->redirect('admin/reqSalaView/' . $id);
         } catch (PDOException $e) {
             $salaModel = new Sala();
@@ -1814,6 +1831,8 @@ class AdminController extends Controller
             'url' => !empty($_POST['url']) ? trim($_POST['url']) : null,
             'ordem' => (int)($_POST['ordem'] ?? 0),
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            // Evento afixado aparece sempre no topo da lista (sugestão do professor).
+            'fixado' => isset($_POST['fixado']) ? 1 : 0,
             'imagem_url' => $imagemBlob,
         ];
         try {
@@ -1866,6 +1885,8 @@ class AdminController extends Controller
             'url' => !empty($_POST['url']) ? trim($_POST['url']) : null,
             'ordem' => (int)($_POST['ordem'] ?? 0),
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            // Evento afixado aparece sempre no topo da lista (sugestão do professor).
+            'fixado' => isset($_POST['fixado']) ? 1 : 0,
             'imagem_url' => $imagemFinal,
         ];
         try {

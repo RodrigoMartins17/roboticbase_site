@@ -318,6 +318,26 @@ class Mailer
         return self::send($to, 'Alterar palavra-passe — Clube de Robótica RoboticaXL', self::layout($corpo));
     }
 
+    // Email enviado quando o CLUBE edita uma requisição (ex: muda a hora de
+    // entrega) — o utilizador fica logo a saber das novas datas.
+    public static function sendRequisicaoEditada(string $to, string $name, string $tipo, int $id, ?string $inicio, ?string $fim): bool
+    {
+        $tipoLbl = (stripos($tipo, 'sala') !== false) ? 'sala' : 'material';
+        $rotuloIni = ($tipoLbl === 'sala') ? 'Início da reserva' : 'Levantamento';
+        $rotuloFim = ($tipoLbl === 'sala') ? 'Fim da reserva' : 'Devolução';
+        $fmt = fn(?string $d) => $d ? date('d/m/Y \à\s H:i', strtotime($d)) : '—';
+        $corpo =
+            '<p style="margin:0 0 4px;font-size:16px;">Olá <strong>' . htmlspecialchars($name) . '</strong>,</p>' . "\n"
+            . '<p style="margin:0 0 16px;font-size:14px;color:#3c4043;line-height:1.5;">A tua requisição de ' . $tipoLbl . ' <strong>#' . $id . '</strong> foi <strong>atualizada pelo clube</strong>. Confirma os novos dados:</p>' . "\n"
+            . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;background:#e8f0fe;border:1px solid #c6dafc;border-radius:10px;"><tr>'
+            . '<td style="padding:14px 18px;font-size:14px;color:#174ea6;line-height:1.7;">'
+            . '<strong>' . $rotuloIni . ':</strong> ' . $fmt($inicio) . '<br>'
+            . '<strong>' . $rotuloFim . ':</strong> ' . $fmt($fim)
+            . '</td></tr></table>' . "\n"
+            . '<p style="margin:0;font-size:13px;color:#5f6368;line-height:1.5;">Se estas datas não te servirem, contacta o clube o quanto antes.</p>';
+        return self::send($to, 'Requisição #' . $id . ' atualizada pelo clube', self::layout($corpo));
+    }
+
     public static function sendStatusUpdate(string $to, string $name, string $tipo, int $id, string $estado): bool
     {
         $tipoLbl = (stripos($tipo, 'sala') !== false) ? 'sala' : 'material';
@@ -351,12 +371,12 @@ class Mailer
 
         $corpo =
             '<p style="margin:0 0 4px;font-size:16px;">Olá <strong>' . htmlspecialchars($name) . '</strong>,</p>' . "\n"
-            . '<p style="margin:0 0 14px;font-size:14px;color:#3c4043;line-height:1.5;">Lembrete: faltam cerca de <strong>12 horas</strong> para ' . $accLabel . '.</p>' . "\n"
+            . '<p style="margin:0 0 14px;font-size:14px;color:#3c4043;line-height:1.5;">Lembrete: faltam cerca de <strong>24 horas</strong> para ' . $accLabel . '.</p>' . "\n"
             . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;background:#fef7e0;border:1px solid #fde293;border-radius:10px;"><tr>'
             . '<td style="padding:12px 16px;font-size:14px;color:#7c5c00;line-height:1.5;"><strong>' . htmlspecialchars($item) . '</strong> &nbsp;·&nbsp; Requisição #' . $id . '<br>Data marcada: <strong>' . $quando . '</strong></td>'
             . '</tr></table>' . "\n"
             . self::timeline($passos) . "\n"
             . '<p style="margin:16px 0 0;font-size:13px;color:#5f6368;">Por favor, sê pontual. Obrigado!</p>';
-        return self::send($to, 'Lembrete: faltam ~12h — requisição #' . $id, self::layout($corpo));
+        return self::send($to, 'Lembrete: faltam ~24h — requisição #' . $id, self::layout($corpo));
     }
 }

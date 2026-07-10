@@ -854,7 +854,11 @@ $isAluno = Auth::isAluno();
                         $imgUrl = !empty($evento['imagem_src']) ? $evento['imagem_src'] : BASE_URL . 'uploads/fundo_site.jpg';
                     ?>
                         <div class="col-md-6 col-lg-4 <?php echo $hiddenClass; ?>">
-                            <div class="rb-card rb-event-card h-100 d-flex flex-column">
+                            <div class="rb-card rb-event-card h-100 d-flex flex-column" style="position:relative;">
+                                <?php if (!empty($evento['fixado'])): ?>
+                                    <!-- Selo de evento afixado (destaque escolhido pelo clube) -->
+                                    <span style="position:absolute;top:10px;left:10px;z-index:2;background:#ffd60a;color:#050505;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:8px;letter-spacing:.5px;">AFIXADO</span>
+                                <?php endif; ?>
                                 <img src="<?php echo $imgUrl; ?>" alt="<?php echo htmlspecialchars($evento['titulo']); ?>">
                                 
                                 <div class="rb-event-info mt-auto">

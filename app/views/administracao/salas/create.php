@@ -53,6 +53,7 @@
                         <option value="MANUTENCAO">Em Manutenção</option>
                         <option value="DANIFICADA">Danificada</option>
                         <option value="OCUPADA">Ocupada</option>
+                        <option value="INDISPONIVEL">Indisponível (não requisitável)</option>
                     </select>
                 </div>
 

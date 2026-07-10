@@ -1,8 +1,8 @@
 <?php
 // ============================================================================
-//  AVISOS 12h ANTES — correr periodicamente (idealmente de hora a hora).
+//  AVISOS 24h ANTES — correr periodicamente (idealmente de hora a hora).
 //  ----------------------------------------------------------------------------
-//  Envia um email ao utilizador quando falta ~12h para:
+//  Envia um email ao utilizador quando faltam ~24h para:
 //    - ir BUSCAR o material/sala (data de levantamento / início da reserva)
 //    - DEVOLVER o material/sala (data de devolução / fim da reserva)
 //  Guarda o que já foi enviado (tabela aviso_requisicao) para não repetir.
@@ -57,7 +57,7 @@ $consultas = [
       JOIN material m   ON m.id = e.id_material
       LEFT JOIN aviso_requisicao a ON a.tipo_req='material' AND a.id_req=re.id AND a.tipo_aviso='LEVANTAMENTO'
       WHERE re.estado_pedido='ACEITE' AND re.data_levantamento IS NOT NULL
-        AND re.data_levantamento > NOW() AND re.data_levantamento <= NOW() + INTERVAL 12 HOUR
+        AND re.data_levantamento > NOW() AND re.data_levantamento <= NOW() + INTERVAL 24 HOUR
         AND a.id IS NULL"],
     // Material — devolver (devolução)
     ['material', 'DEVOLUCAO',
@@ -68,7 +68,7 @@ $consultas = [
       JOIN material m   ON m.id = e.id_material
       LEFT JOIN aviso_requisicao a ON a.tipo_req='material' AND a.id_req=re.id AND a.tipo_aviso='DEVOLUCAO'
       WHERE re.estado_pedido='EM_USO' AND re.data_devolucao IS NOT NULL
-        AND re.data_devolucao > NOW() AND re.data_devolucao <= NOW() + INTERVAL 12 HOUR
+        AND re.data_devolucao > NOW() AND re.data_devolucao <= NOW() + INTERVAL 24 HOUR
         AND a.id IS NULL"],
     // Sala — ir buscar (início da reserva)
     ['sala', 'LEVANTAMENTO',
@@ -78,7 +78,7 @@ $consultas = [
       JOIN sala s       ON s.id = rs.id_sala
       LEFT JOIN aviso_requisicao a ON a.tipo_req='sala' AND a.id_req=rs.id AND a.tipo_aviso='LEVANTAMENTO'
       WHERE rs.estado_sala='ACEITE' AND rs.data_inicio IS NOT NULL
-        AND rs.data_inicio > NOW() AND rs.data_inicio <= NOW() + INTERVAL 12 HOUR
+        AND rs.data_inicio > NOW() AND rs.data_inicio <= NOW() + INTERVAL 24 HOUR
         AND a.id IS NULL"],
     // Sala — devolver (fim da reserva)
     ['sala', 'DEVOLUCAO',
@@ -88,7 +88,7 @@ $consultas = [
       JOIN sala s       ON s.id = rs.id_sala
       LEFT JOIN aviso_requisicao a ON a.tipo_req='sala' AND a.id_req=rs.id AND a.tipo_aviso='DEVOLUCAO'
       WHERE rs.estado_sala='EM_USO' AND rs.data_fim IS NOT NULL
-        AND rs.data_fim > NOW() AND rs.data_fim <= NOW() + INTERVAL 12 HOUR
+        AND rs.data_fim > NOW() AND rs.data_fim <= NOW() + INTERVAL 24 HOUR
         AND a.id IS NULL"],
 ];
 

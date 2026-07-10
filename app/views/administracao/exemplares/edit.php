@@ -29,7 +29,7 @@
                 <div class="col-md-4 mt-3 mt-md-0">
                     <label class="form-label fw-bold">Estado</label>
                     <select name="estado" class="form-select">
-                        <?php foreach (['DISPONIVEL','EMPRESTADO','DANIFICADO','MANUTENCAO','PERDIDO'] as $est): ?>
+                        <?php foreach (['DISPONIVEL','EMPRESTADO','DANIFICADO','MANUTENCAO','PERDIDO','INDISPONIVEL'] as $est): ?>
                             <option value="<?php echo $est; ?>" <?php echo ($exemplar['estado'] ?? '') === $est ? 'selected' : ''; ?>><?php echo $est; ?></option>
                         <?php endforeach; ?>
                     </select>

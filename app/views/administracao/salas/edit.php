@@ -54,6 +54,7 @@
                         <option value="MANUTENCAO" <?php echo $sEstado === 'MANUTENCAO' ? 'selected' : ''; ?>>Em Manutenção</option>
                         <option value="DANIFICADA" <?php echo $sEstado === 'DANIFICADA' ? 'selected' : ''; ?>>Danificada</option>
                         <option value="OCUPADA" <?php echo $sEstado === 'OCUPADA' ? 'selected' : ''; ?>>Ocupada</option>
+                        <option value="INDISPONIVEL" <?php echo $sEstado === 'INDISPONIVEL' ? 'selected' : ''; ?>>Indisponível (não requisitável)</option>
                     </select>
                 </div>
 

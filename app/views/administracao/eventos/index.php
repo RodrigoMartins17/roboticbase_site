@@ -57,7 +57,7 @@ include __DIR__ . '/../_filtros.php';
                             <?php else: ?>
                                 <div style="width: 36px; height: 36px; border-radius: 8px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i class="fas fa-camera"></i></div>
                             <?php endif; ?>
-                            <strong><?php echo htmlspecialchars($e['titulo']); ?></strong>
+                            <strong><?php if (!empty($e['fixado'])): ?><span title="Afixado" style="background:#fde68a;color:#92400e;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:8px;margin-right:6px;">AFIXADO</span><?php endif; ?><?php echo htmlspecialchars($e['titulo']); ?></strong>
                         </div>
                     </td>
                     <td><?php echo htmlspecialchars($e['ordem']); ?></td>

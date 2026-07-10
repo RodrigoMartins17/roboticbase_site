@@ -35,6 +35,7 @@
                     <label class="form-label fw-bold">Estado</label>
                     <select name="estado" class="form-select">
                         <option value="DISPONIVEL">Disponível</option>
+                        <option value="INDISPONIVEL">Indisponível (não requisitável)</option>
                         <option value="EMPRESTADO">Emprestado</option>
                         <option value="DANIFICADO">Danificado</option>
                         <option value="MANUTENCAO">Em Manutenção</option>

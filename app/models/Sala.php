@@ -8,6 +8,13 @@ class Sala extends Model
         return $this->db->query("SELECT * FROM sala ORDER BY bloco, andar, numero")->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Só as salas que podem mesmo ser requisitadas (sugestão do professor:
+    // salas indisponíveis/em manutenção não devem aparecer para reserva).
+    public function disponiveis()
+    {
+        return $this->db->query("SELECT * FROM sala WHERE estado = 'DISPONIVEL' ORDER BY bloco, andar, numero")->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function find(int $id)
     {
         $stmt = $this->db->prepare("SELECT * FROM sala WHERE id = ?");

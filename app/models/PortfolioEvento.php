@@ -7,7 +7,7 @@ class PortfolioEvento extends Model
   // Usado no Painel de Administração (Mostra TODOS, ativos e inativos)
     public function todos()
     {
-        $stmt = $this->db->prepare("SELECT * FROM evento ORDER BY ordem ASC, created_at DESC");
+        $stmt = $this->db->prepare("SELECT * FROM evento ORDER BY fixado DESC, ordem ASC, created_at DESC");
         $stmt->execute();
         $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $this->attachImagemSrc($eventos);
@@ -16,7 +16,7 @@ class PortfolioEvento extends Model
     // Usado na página pública do site (Mostra APENAS os ativos)
     public function obterAtivos()
     {
-        $stmt = $this->db->prepare("SELECT * FROM evento WHERE ativo = 1 ORDER BY ordem ASC, created_at DESC");
+        $stmt = $this->db->prepare("SELECT * FROM evento WHERE ativo = 1 ORDER BY fixado DESC, ordem ASC, created_at DESC");
         $stmt->execute();
         $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $this->attachImagemSrc($eventos);
@@ -35,8 +35,9 @@ class PortfolioEvento extends Model
 
     public function create(array $data)
     {
-        $sql = "INSERT INTO evento (titulo, descricao, imagem_url, url, ordem, ativo) 
-                VALUES (:titulo, :descricao, :imagem_url, :url, :ordem, :ativo)";
+        $data['fixado'] = $data['fixado'] ?? 0;
+        $sql = "INSERT INTO evento (titulo, descricao, imagem_url, url, ordem, ativo, fixado) 
+                VALUES (:titulo, :descricao, :imagem_url, :url, :ordem, :ativo, :fixado)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($data);
     }
@@ -44,9 +45,10 @@ class PortfolioEvento extends Model
     public function updateById(int $id, array $data)
     {
         $data['id'] = $id;
+        $data['fixado'] = $data['fixado'] ?? 0;
         $sql = "UPDATE evento 
                 SET titulo = :titulo, descricao = :descricao, imagem_url = :imagem_url, 
-                    url = :url, ordem = :ordem, ativo = :ativo
+                    url = :url, ordem = :ordem, ativo = :ativo, fixado = :fixado
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($data);

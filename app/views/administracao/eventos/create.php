@@ -46,6 +46,11 @@
                         <input class="form-check-input" type="checkbox" id="ativoSwitch" name="ativo" value="1" checked>
                         <label class="form-check-label fs-6 ms-2 mt-1" for="ativoSwitch" style="font-weight: 600; color: #475569;">Visível no Site (Ativo)</label>
                     </div>
+                    <div class="form-check form-switch mt-2">
+                        <!-- Evento afixado: fica sempre no topo da lista de eventos -->
+                        <input class="form-check-input" type="checkbox" id="fixadoSwitch" name="fixado" value="1">
+                        <label class="form-check-label fs-6 ms-2 mt-1" for="fixadoSwitch" style="font-weight: 600; color: #475569;">Afixar no topo (destaque)</label>
+                    </div>
                 </div>
                 
                 <div class="d-flex justify-content-end gap-3 border-top pt-4">
